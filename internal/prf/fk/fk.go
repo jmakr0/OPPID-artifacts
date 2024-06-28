@@ -23,9 +23,9 @@ func New() *FK {
 	}
 }
 
-func (p *FK) Eval(innerMsg, outerMsg []byte) *GG.G1 {
-	yStdPRF := p.PRF.Eval(outerMsg) // y = PRF(k, outerMsg)
-	k := utils.HashToScalar(yStdPRF, []byte("BLS12384_XMD:SHA-256_EVL_FK"))
-	p.DLPRF.K = &k
-	return p.DLPRF.Eval(innerMsg)
+func (p *FK) Eval(msg, k []byte) *GG.G1 {
+	yStdPRF := p.PRF.Eval(k) // y = PRF(k, k)
+	evlKey := utils.HashToScalar(yStdPRF, []byte("BLS12384_XMD:SHA-256_EVL_FK"))
+	p.DLPRF.K = &evlKey
+	return p.DLPRF.Eval(msg)
 }
