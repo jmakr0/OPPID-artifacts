@@ -6,6 +6,7 @@ import (
 	GG "github.com/cloudflare/circl/ecc/bls12381"
 )
 
+// todo: split into public/private values
 type Params struct {
 	g *GG.G2
 	x *GG.Scalar
@@ -15,8 +16,8 @@ type Params struct {
 }
 
 type Signature struct {
-	sig1 *GG.G1
-	sig2 *GG.G1
+	Sig1 *GG.G1
+	Sig2 *GG.G1
 }
 
 // New initializes the parameters for the signature scheme.
@@ -76,15 +77,15 @@ func (p *Params) Sign(msg []byte) (*Signature, error) {
 	h2.ScalarMult(e, h1)
 
 	return &Signature{
-		sig1: h1,
-		sig2: h2,
+		Sig1: h1,
+		Sig2: h2,
 	}, nil
 }
 
 // Verify checks the validity of the given signature for the message.
 func (p *Params) Verify(msg []byte, sig Signature) (bool, error) {
-	if !sig.sig1.IsOnG1() || sig.sig1.IsIdentity() {
-		return false, errors.New("invalid sig1: not on G1 curve or is identity")
+	if !sig.Sig1.IsOnG1() || sig.Sig1.IsIdentity() {
+		return false, errors.New("invalid Sig1: not on G1 curve or is identity")
 	}
 
 	m := utils.HashToScalar(msg)
@@ -94,8 +95,8 @@ func (p *Params) Verify(msg []byte, sig Signature) (bool, error) {
 	XYm := new(GG.G2)
 	XYm.Add(p.X, Ym)
 
-	lhs := GG.Pair(sig.sig1, XYm)
-	rhs := GG.Pair(sig.sig2, p.g)
+	lhs := GG.Pair(sig.Sig1, XYm)
+	rhs := GG.Pair(sig.Sig2, p.g)
 
 	return lhs.IsEqual(rhs), nil
 }

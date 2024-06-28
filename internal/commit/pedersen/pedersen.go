@@ -13,6 +13,14 @@ type Params struct {
 	H *GG.G1
 }
 
+type Commitment struct {
+	C *GG.G1
+}
+
+type Opening struct {
+	O *GG.Scalar
+}
+
 // New initializes and returns the curve parameters.
 func New() (*Params, error) {
 	// Define base points g and h on the curve

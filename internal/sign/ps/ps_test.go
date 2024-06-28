@@ -23,7 +23,7 @@ func TestSign(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to sign message: %v", err)
 	}
-	if !sig.sig1.IsOnG1() || !sig.sig2.IsOnG1() {
+	if !sig.Sig1.IsOnG1() || !sig.Sig2.IsOnG1() {
 		t.Fatalf("Signature points are not on G1 curve")
 	}
 }
@@ -61,10 +61,10 @@ func TestVerifyEdgeCases(t *testing.T) {
 
 	// Test with identity point
 	identitySig := Signature{
-		sig1: new(GG.G1),
-		sig2: sig.sig2,
+		Sig1: new(GG.G1),
+		Sig2: sig.Sig2,
 	}
-	identitySig.sig1.IsIdentity()
+	identitySig.Sig1.IsIdentity()
 	valid, err := ps.Verify(msg, identitySig)
 	if err == nil && valid {
 		t.Fatalf("Signature with identity point should not be verified")
@@ -72,8 +72,8 @@ func TestVerifyEdgeCases(t *testing.T) {
 
 	// Test with non-G1 point (using point from G2 as invalid point for G1)
 	invalidSig := Signature{
-		sig1: new(GG.G1), // not properly initialized, hence not on G1
-		sig2: sig.sig2,
+		Sig1: new(GG.G1), // not properly initialized, hence not on G1
+		Sig2: sig.Sig2,
 	}
 	valid, err = ps.Verify(msg, invalidSig)
 	if err == nil && valid {
