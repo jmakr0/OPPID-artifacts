@@ -60,15 +60,15 @@ func New(w *Witnesses, pubInput *PublicInputs, aux []byte) *Proof {
 	r, _ := utils.GenerateRandomScalar()
 
 	// commitment announcement
-	gCom := new(GG.G1)
-	gCom.ScalarMult(r, pubInput.PCParams.G)
+	gm := new(GG.G1)
+	gm.ScalarMult(r, pubInput.PCParams.G)
 
-	hScalar, _ := utils.GenerateRandomScalar()
-	hCom := new(GG.G1)
-	hCom.ScalarMult(hScalar, pubInput.PCParams.H)
+	h, _ := utils.GenerateRandomScalar()
+	ho := new(GG.G1)
+	ho.ScalarMult(h, pubInput.PCParams.H)
 
 	anCom := new(GG.G1)
-	anCom.Add(gCom, hCom)
+	anCom.Add(gm, ho)
 
 	// signature announcement
 	randSig := randomizePSSignature(w.Sig)
@@ -110,7 +110,7 @@ func New(w *Witnesses, pubInput *PublicInputs, aux []byte) *Proof {
 	oz.Mul(w.Opening.O, &z)
 
 	resO := new(GG.Scalar)
-	resO.Add(hScalar, oz)
+	resO.Add(h, oz)
 
 	tz := new(GG.Scalar)
 	tz.Mul(randSig.t, &z)
