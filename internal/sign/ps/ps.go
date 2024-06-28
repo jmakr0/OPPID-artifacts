@@ -8,7 +8,7 @@ import (
 
 // todo: split into public/private values
 type Params struct {
-	g *GG.G2
+	G *GG.G2 // corresponds to g tilde
 	x *GG.Scalar
 	y *GG.Scalar
 	X *GG.G2
@@ -45,7 +45,7 @@ func New() (*Params, error) {
 	}
 
 	return &Params{
-		g: g,
+		G: g,
 		x: x,
 		y: y,
 		X: X,
@@ -66,9 +66,9 @@ func (p *Params) Sign(msg []byte) (*Signature, error) {
 		return nil, errors.New("generated h1 is not on G1 curve")
 	}
 
-	m := utils.HashToScalar(msg)
+	m := utils.HashToScalar(msg, []byte("OPPID_BLS12384_XMD:SHA-256_PS"))
 	ym := new(GG.Scalar)
-	ym.Mul(p.y, m)
+	ym.Mul(p.y, &m)
 
 	e := new(GG.Scalar)
 	e.Add(p.x, ym) // x+y*m
@@ -88,15 +88,15 @@ func (p *Params) Verify(msg []byte, sig Signature) (bool, error) {
 		return false, errors.New("invalid Sig1: not on G1 curve or is identity")
 	}
 
-	m := utils.HashToScalar(msg)
+	m := utils.HashToScalar(msg, []byte("OPPID_BLS12384_XMD:SHA-256_PS"))
 	Ym := new(GG.G2)
-	Ym.ScalarMult(m, p.Y)
+	Ym.ScalarMult(&m, p.Y)
 
 	XYm := new(GG.G2)
 	XYm.Add(p.X, Ym)
 
 	lhs := GG.Pair(sig.Sig1, XYm)
-	rhs := GG.Pair(sig.Sig2, p.g)
+	rhs := GG.Pair(sig.Sig2, p.G)
 
 	return lhs.IsEqual(rhs), nil
 }

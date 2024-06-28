@@ -46,11 +46,11 @@ func New() (*Params, error) {
 }
 
 // Commit computes the Pedersen commit C = mG + oH
-func (p *Params) Commit(msg []byte) (GG.G1, GG.Scalar, error) {
-	m := utils.HashToScalar(msg)
+func (p *Params) Commit(msg []byte) (*Commitment, *Opening, error) {
+	m := utils.HashToScalar(msg, []byte("OPPID_BLS12384_XMD:SHA-256_COM_PC"))
 
 	g := new(GG.G1)
-	g.ScalarMult(m, p.G)
+	g.ScalarMult(&m, p.G)
 
 	var o GG.Scalar
 	_ = o.Random(rand.Reader)
@@ -62,23 +62,23 @@ func (p *Params) Commit(msg []byte) (GG.G1, GG.Scalar, error) {
 	c.Add(g, h)
 
 	if !c.IsOnG1() || o.IsZero() == 1 {
-		return GG.G1{}, GG.Scalar{}, fmt.Errorf("failed to generate commitment")
+		return nil, nil, fmt.Errorf("failed to generate commitment")
 	}
 
-	return c, o, nil
+	return &Commitment{C: &c}, &Opening{O: &o}, nil
 }
 
-func (p *Params) Open(msg []byte, com *GG.G1, o *GG.Scalar) bool {
-	m := utils.HashToScalar(msg)
+func (p *Params) Open(msg []byte, commitment *Commitment, opening *Opening) bool {
+	m := utils.HashToScalar(msg, []byte("OPPID_BLS12384_XMD:SHA-256_COM_PC"))
 
 	g := new(GG.G1)
-	g.ScalarMult(m, p.G)
+	g.ScalarMult(&m, p.G)
 
 	h := new(GG.G1)
-	h.ScalarMult(o, p.H)
+	h.ScalarMult(opening.O, p.H)
 
 	c := new(GG.G1)
 	c.Add(g, h)
 
-	return c.IsEqual(com)
+	return c.IsEqual(commitment.C)
 }

@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-// HashToScalar hashes a byte array to a scalar using sha512 hash function
+// HashToScalar hashes a byte array to a scalar using sha256 hash function
 // https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-hash-to-curve-13#name-expand_message_xmd
 func HashToScalar(data, dst []byte) GG.Scalar {
 	var uniformBytes [64]byte

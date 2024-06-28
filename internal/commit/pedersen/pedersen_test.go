@@ -24,11 +24,11 @@ func TestCommitValidMessage(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to run commitment: %s", err)
 	}
-	if !commitment.IsOnG1() {
+	if !commitment.C.IsOnG1() {
 		t.Fatalf("Commitment should be on G1")
 	}
-	if opening.IsZero() == 1 {
-		t.Fatalf("Random scalar o should be valid")
+	if opening.O.IsZero() == 1 {
+		t.Fatalf("Opening should be valid")
 	}
 }
 
@@ -37,7 +37,7 @@ func TestOpenWithCorrectParameters(t *testing.T) {
 	msg := []byte("test message")
 
 	commitment, opening, _ := pc.Commit(msg)
-	isValid := pc.Open(msg, &commitment, &opening)
+	isValid := pc.Open(msg, commitment, opening)
 	if !isValid {
 		t.Fatalf("Open should validate the correct commitment")
 	}
@@ -50,7 +50,7 @@ func TestOpenWithIncorrectMessage(t *testing.T) {
 	commitment, opening, _ := pc.Commit(msg)
 
 	invalidMsg := []byte("wrong message")
-	isValid := pc.Open(invalidMsg, &commitment, &opening)
+	isValid := pc.Open(invalidMsg, commitment, opening)
 	if isValid {
 		t.Fatalf("Open should not validate the incorrect commitment")
 	}
@@ -62,12 +62,16 @@ func TestOpenWithIncorrectRandomness(t *testing.T) {
 	msg := []byte("test message")
 	commitment, _, _ := pc.Commit(msg)
 
-	invalidRandomOpening := new(GG.Scalar)
-	_ = invalidRandomOpening.Random(rand.Reader)
-	invalidZeroOpening := new(GG.Scalar)
+	r := new(GG.Scalar)
+	_ = r.Random(rand.Reader)
 
-	isValid1 := pc.Open(msg, &commitment, invalidRandomOpening)
-	isValid2 := pc.Open(msg, &commitment, invalidZeroOpening)
+	invalidRandomOpening := new(Opening)
+	invalidRandomOpening.O = r
+
+	invalidZeroOpening := &Opening{O: new(GG.Scalar)}
+
+	isValid1 := pc.Open(msg, commitment, invalidRandomOpening)
+	isValid2 := pc.Open(msg, commitment, invalidZeroOpening)
 	if isValid1 || isValid2 {
 		t.Fatalf("Open should not validate the incorrect commitment with wrong randomness")
 	}
