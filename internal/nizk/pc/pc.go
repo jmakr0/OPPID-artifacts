@@ -8,6 +8,8 @@ import (
 	"log"
 )
 
+const DST = "OPPID_BLS12384_XMD:SHA-256_NIZK_PC"
+
 type Witness struct {
 	msg     []byte
 	opening *PC.Opening
@@ -54,7 +56,7 @@ func New(p *PublicInput, w *Witness) *Proof {
 
 	challengeData := challengeBuffer.Bytes()
 
-	z := utils.HashToScalar(challengeData, []byte("OPPID_BLS12384_XMD:SHA-256_NIZK_PC"))
+	z := utils.HashToScalar(challengeData, []byte(DST))
 
 	// Responses
 	m := utils.HashToScalar(w.msg, []byte(PC.DST))
@@ -83,7 +85,7 @@ func Verify(p *PublicInput, pi *Proof) bool {
 
 	challengeData := challengeBuffer.Bytes()
 
-	z := utils.HashToScalar(challengeData, []byte("OPPID_BLS12384_XMD:SHA-256_NIZK_PC"))
+	z := utils.HashToScalar(challengeData, []byte(DST))
 
 	log.Println(p.params.G.String())
 
