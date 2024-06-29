@@ -16,7 +16,7 @@ func TestNewVerify(t *testing.T) {
 
 	pi := New(p, w)
 
-	isValid := Verify(pi, p)
+	isValid := Verify(p, pi)
 	if !isValid {
 		t.Errorf("Verify(%v, %v) returned %v", p, pi, isValid)
 	}

@@ -1,7 +1,7 @@
 package pc
 
 import (
-	"OPPID/internal/commit/pedersen"
+	PC "OPPID/internal/commit/pedersen"
 	"OPPID/internal/utils"
 	"bytes"
 	GG "github.com/cloudflare/circl/ecc/bls12381"
@@ -10,12 +10,12 @@ import (
 
 type Witness struct {
 	msg     []byte
-	opening *pedersen.Opening
+	opening *PC.Opening
 }
 
 type PublicInput struct {
-	params *pedersen.Params
-	com    *pedersen.Commitment
+	params *PC.Params
+	com    *PC.Commitment
 }
 
 type Proof struct {
@@ -57,7 +57,7 @@ func New(p *PublicInput, w *Witness) *Proof {
 	z := utils.HashToScalar(challengeData, []byte("OPPID_BLS12384_XMD:SHA-256_NIZK_PC"))
 
 	// Responses
-	m := utils.HashToScalar(w.msg, []byte("OPPID_BLS12384_XMD:SHA-256_NIZK_PC"))
+	m := utils.HashToScalar(w.msg, []byte(PC.DST))
 	mz := new(GG.Scalar)
 	mz.Mul(&m, &z)
 
@@ -75,7 +75,7 @@ func New(p *PublicInput, w *Witness) *Proof {
 	}
 }
 
-func Verify(pi *Proof, p *PublicInput) bool {
+func Verify(p *PublicInput, pi *Proof) bool {
 	var challengeBuffer bytes.Buffer
 
 	challengeBuffer.Write(pi.A.Bytes())

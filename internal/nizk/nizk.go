@@ -1,7 +1,7 @@
 package nizk
 
 import (
-	"OPPID/internal/commit/pedersen"
+	PC "OPPID/internal/commit/pedersen"
 	"OPPID/internal/sign/ps"
 	"OPPID/internal/utils"
 	"bytes"
@@ -38,13 +38,13 @@ func randomizePSSignature(psSig *ps.Signature) *RandomizedPSSignature {
 type Witnesses struct {
 	Msg     []byte
 	Sig     *ps.Signature
-	Opening *pedersen.Opening
+	Opening *PC.Opening
 }
 
 type PublicInputs struct {
 	PSParams *ps.Params
-	PCParams *pedersen.Params
-	Com      *pedersen.Commitment
+	PCParams *PC.Params
+	Com      *PC.Commitment
 }
 
 type Proof struct {
@@ -99,7 +99,7 @@ func New(w *Witnesses, pubInput *PublicInputs, aux []byte) *Proof {
 	z := utils.HashToScalar(challengeData, []byte("OPPID_BLS12384_XMD:SHA-256_NIZK"))
 
 	// Responses
-	m := utils.HashToScalar(w.Msg, []byte("OPPID_BLS12384_XMD:SHA-256_NIZK"))
+	m := utils.HashToScalar(w.Msg, []byte(PC.DST))
 	mz := new(GG.Scalar)
 	mz.Mul(&m, &z)
 

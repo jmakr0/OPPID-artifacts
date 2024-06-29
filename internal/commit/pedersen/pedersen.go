@@ -7,6 +7,8 @@ import (
 	GG "github.com/cloudflare/circl/ecc/bls12381"
 )
 
+const DST = "OPPID_BLS12384_XMD:SHA-256_COM_PC"
+
 // Params holds the parameters for the BLS12-381 curve.
 type Params struct {
 	G *GG.G1
@@ -47,7 +49,7 @@ func New() (*Params, error) {
 
 // Commit computes the Pedersen commit C = mG + oH
 func (p *Params) Commit(msg []byte) (*Commitment, *Opening, error) {
-	m := utils.HashToScalar(msg, []byte("OPPID_BLS12384_XMD:SHA-256_COM_PC"))
+	m := utils.HashToScalar(msg, []byte(DST))
 
 	g := new(GG.G1)
 	g.ScalarMult(&m, p.G)
@@ -69,7 +71,7 @@ func (p *Params) Commit(msg []byte) (*Commitment, *Opening, error) {
 }
 
 func (p *Params) Open(msg []byte, commitment *Commitment, opening *Opening) bool {
-	m := utils.HashToScalar(msg, []byte("OPPID_BLS12384_XMD:SHA-256_COM_PC"))
+	m := utils.HashToScalar(msg, []byte(DST))
 
 	g := new(GG.G1)
 	g.ScalarMult(&m, p.G)
