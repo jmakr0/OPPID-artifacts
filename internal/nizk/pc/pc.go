@@ -1,3 +1,5 @@
+// This package provides a NIZK for a pedersen commitment
+
 package pc
 
 import (
@@ -41,14 +43,14 @@ func New(p *PublicInput, w *Witness) *Proof {
 	a.Add(g, h)
 
 	// Challenge
-	var challengeBuffer bytes.Buffer
+	var buff bytes.Buffer
 
-	challengeBuffer.Write(a.Bytes())
-	challengeBuffer.Write(p.com.C.Bytes())
+	buff.Write(a.Bytes())
+	buff.Write(p.com.C.Bytes())
 
-	challengeData := challengeBuffer.Bytes()
+	data := buff.Bytes()
 
-	z := utils.HashToScalar(challengeData, []byte(DST))
+	z := utils.HashToScalar(data, []byte(DST))
 
 	// Responses
 	m := utils.HashToScalar(w.msg, []byte(PC.DST))

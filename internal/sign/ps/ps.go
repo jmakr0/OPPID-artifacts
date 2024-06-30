@@ -6,6 +6,8 @@ import (
 	GG "github.com/cloudflare/circl/ecc/bls12381"
 )
 
+const DST = "OPPID_BLS12384_XMD:SHA-256_PS"
+
 // todo: split into public/private values
 type Params struct {
 	G *GG.G2 // corresponds to g tilde
@@ -66,7 +68,7 @@ func (p *Params) Sign(msg []byte) (*Signature, error) {
 		return nil, errors.New("generated h1 is not on G1 curve")
 	}
 
-	m := utils.HashToScalar(msg, []byte("OPPID_BLS12384_XMD:SHA-256_PS"))
+	m := utils.HashToScalar(msg, []byte(DST))
 	ym := new(GG.Scalar)
 	ym.Mul(p.y, &m)
 
@@ -88,7 +90,7 @@ func (p *Params) Verify(msg []byte, sig Signature) (bool, error) {
 		return false, errors.New("invalid Sig1: not on G1 curve or is identity")
 	}
 
-	m := utils.HashToScalar(msg, []byte("OPPID_BLS12384_XMD:SHA-256_PS"))
+	m := utils.HashToScalar(msg, []byte(DST))
 	Ym := new(GG.G2)
 	Ym.ScalarMult(&m, p.Y)
 

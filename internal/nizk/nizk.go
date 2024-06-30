@@ -9,31 +9,7 @@ import (
 	"log"
 )
 
-type RandomizedPSSignature struct {
-	t   *GG.Scalar
-	sig *ps.Signature
-}
-
-// Corresponds to 6.2: Proving Knowledge of a Signature
-func randomizePSSignature(psSig *ps.Signature) *RandomizedPSSignature {
-	r, _ := utils.GenerateRandomScalar()
-	r1 := new(GG.G1)
-	r1.ScalarMult(r, psSig.Sig1) // sig1^r
-
-	r2 := new(GG.G1)
-	r2.ScalarMult(r, psSig.Sig2) // sig2^r
-
-	t, _ := utils.GenerateRandomScalar()
-	t1 := new(GG.G1)
-	t1.ScalarMult(t, r1) // sig1^rt
-
-	t2 := new(GG.G1)
-	t2.Add(r2, t1) // sig2^r * sig1^tr
-
-	sig := &ps.Signature{Sig1: r1, Sig2: t2} // sig' = (sig1^r, (sig2 * sig1^t)^r)
-
-	return &RandomizedPSSignature{t: t, sig: sig}
-}
+const DST = "OPPID_BLS12384_XMD:SHA-256_NIZK"
 
 type Witnesses struct {
 	Msg     []byte
@@ -48,115 +24,115 @@ type PublicInputs struct {
 }
 
 type Proof struct {
-	sig        *ps.Signature // randomized signature
-	anCom      *GG.G1
-	anSig      *GG.Gt
-	resMsg     *GG.Scalar
-	resOpening *GG.Scalar
-	resT       *GG.Scalar
+	sig *ps.Signature // randomized signature
+	a1  *GG.G1
+	a2  *GG.Gt
+	s1  *GG.Scalar
+	s2  *GG.Scalar
+	s3  *GG.Scalar
 }
 
 func New(w *Witnesses, pubInput *PublicInputs, aux []byte) *Proof {
-	r, _ := utils.GenerateRandomScalar()
+	u1, _ := utils.GenerateRandomScalar() // for commitment
+	u2, _ := utils.GenerateRandomScalar() // for commitment
+	u3, _ := utils.GenerateRandomScalar() // for signature
 
 	// commitment announcement
-	gm := new(GG.G1)
-	gm.ScalarMult(r, pubInput.PCParams.G)
+	g := new(GG.G1)
+	g.ScalarMult(u1, pubInput.PCParams.G)
 
-	h, _ := utils.GenerateRandomScalar()
-	ho := new(GG.G1)
-	ho.ScalarMult(h, pubInput.PCParams.H)
+	h := new(GG.G1)
+	h.ScalarMult(u2, pubInput.PCParams.H)
 
-	anCom := new(GG.G1)
-	anCom.Add(gm, ho)
+	a1 := new(GG.G1)
+	a1.Add(g, h) // a1 = g^u1 * h^u2
 
 	// signature announcement
 	randSig := randomizePSSignature(w.Sig)
-	tScalar, _ := utils.GenerateRandomScalar()
 
 	// Moved to G2 before calculating pairing
 	rSig2 := new(GG.G2)
-	rSig2.ScalarMult(r, pubInput.PSParams.Y)
+	rSig2.ScalarMult(u1, pubInput.PSParams.Y)
 
 	tSig2 := new(GG.G2)
-	tSig2.ScalarMult(tScalar, pubInput.PSParams.G)
+	tSig2.ScalarMult(u3, pubInput.PSParams.G)
 
 	sig2 := new(GG.G2)
 	sig2.Add(rSig2, tSig2)
 
-	anSig := GG.Pair(randSig.sig.Sig1, sig2)
+	a2 := GG.Pair(randSig.randSig.Sig1, sig2)
 
 	// Challenge
-	var challengeBuffer bytes.Buffer
+	var buf bytes.Buffer
 
-	challengeBuffer.WriteString(pubInput.Com.C.String())
-	challengeBuffer.WriteString(anCom.String())
-	challengeBuffer.WriteString(anSig.String())
-	challengeBuffer.Write(aux)
+	buf.WriteString(pubInput.Com.C.String())
+	buf.WriteString(a1.String())
+	buf.WriteString(a2.String())
+	buf.Write(aux)
 
-	challengeData := challengeBuffer.Bytes()
+	data := buf.Bytes()
 
-	z := utils.HashToScalar(challengeData, []byte("OPPID_BLS12384_XMD:SHA-256_NIZK"))
+	z := utils.HashToScalar(data, []byte(DST)) // challenge is hash of data
 
 	// Responses
 	m := utils.HashToScalar(w.Msg, []byte(PC.DST))
 	mz := new(GG.Scalar)
 	mz.Mul(&m, &z)
 
-	resM := new(GG.Scalar)
-	resM.Add(r, mz)
+	s1 := new(GG.Scalar)
+	s1.Add(u1, mz)
 
-	oz := new(GG.Scalar)
-	oz.Mul(w.Opening.O, &z)
+	o := new(GG.Scalar)
+	o.Mul(w.Opening.O, &z)
 
-	resO := new(GG.Scalar)
-	resO.Add(h, oz)
+	s2 := new(GG.Scalar)
+	s2.Add(u2, o)
 
 	tz := new(GG.Scalar)
 	tz.Mul(randSig.t, &z)
 
-	resT := new(GG.Scalar)
-	resT.Add(tScalar, tz)
+	s3 := new(GG.Scalar)
+	s3.Add(u3, tz)
 
 	return &Proof{
-		sig:        randSig.sig,
-		anCom:      anCom,
-		anSig:      anSig,
-		resMsg:     resM,
-		resOpening: resO,
-		resT:       resT,
+		sig: randSig.randSig,
+		a1:  a1,
+		a2:  a2,
+		s1:  s1,
+		s2:  s2,
+		s3:  s3,
 	}
 }
 
 func Verify(pi *Proof, pubInput *PublicInputs, aux []byte) bool {
-	var challengeBuffer bytes.Buffer
+	var buff bytes.Buffer
 
-	challengeBuffer.WriteString(pubInput.Com.C.String())
-	challengeBuffer.WriteString(pi.anCom.String())
-	challengeBuffer.WriteString(pi.anSig.String())
-	challengeBuffer.Write(aux)
+	buff.WriteString(pubInput.Com.C.String())
+	buff.WriteString(pi.a1.String())
+	buff.WriteString(pi.a2.String())
+	buff.Write(aux)
 
-	challengeData := challengeBuffer.Bytes()
+	data := buff.Bytes()
 
-	z := utils.HashToScalar(challengeData, []byte("OPPID_BLS12384_XMD:SHA-256_NIZK"))
+	z := utils.HashToScalar(data, []byte(DST))
 
 	// Verify commitment
-	gm := new(GG.G1)
-	gm.ScalarMult(pi.resMsg, pubInput.PCParams.G)
+	g := new(GG.G1)
+	g.ScalarMult(pi.s1, pubInput.PCParams.G)
 
-	ho := new(GG.G1)
-	ho.ScalarMult(pi.resOpening, pubInput.PCParams.H)
+	h := new(GG.G1)
+	h.ScalarMult(pi.s2, pubInput.PCParams.H)
 
-	lhsCom := new(GG.G1)
-	lhsCom.Add(gm, ho)
+	lhs1 := new(GG.G1)
+	lhs1.Add(g, h) // lhs1 = g^s1 * h^s2 = g^(u1+m*z) * h^(u2+o*z)
 
-	cz := new(GG.G1)
-	cz.ScalarMult(&z, pubInput.Com.C)
+	c := new(GG.G1)
+	c.ScalarMult(&z, pubInput.Com.C)
 
-	rhsCom := new(GG.G1)
-	rhsCom.Add(cz, pi.anCom)
+	rhs1 := new(GG.G1)
+	rhs1.Add(c, pi.a1) // rhs1 = com^z * a1 = g^(m*z+u1) * h^(o*z+u2)
 
-	validCommitment := lhsCom.IsEqual(rhsCom)
+	validCommitment := lhs1.IsEqual(rhs1)
 	if !validCommitment {
 		log.Println("Invalid commitment")
 	}
@@ -178,13 +154,13 @@ func Verify(pi *Proof, pubInput *PublicInputs, aux []byte) bool {
 	lhsP3.Mul(lhsP2, inv)
 
 	lhsP4 := new(GG.Gt)
-	lhsP4.Mul(lhsP3, pi.anSig)
+	lhsP4.Mul(lhsP3, pi.a2)
 
 	gt := new(GG.G2)
-	gt.ScalarMult(pi.resT, pubInput.PSParams.G)
+	gt.ScalarMult(pi.s3, pubInput.PSParams.G)
 
 	ym := new(GG.G2)
-	ym.ScalarMult(pi.resMsg, pubInput.PSParams.Y)
+	ym.ScalarMult(pi.s1, pubInput.PSParams.Y)
 
 	rhsG2 := new(GG.G2)
 	rhsG2.Add(ym, gt)

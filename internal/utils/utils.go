@@ -30,9 +30,36 @@ func GenerateRandomScalar() (*GG.Scalar, error) {
 	return scalar, nil
 }
 
+func GenerateG1Point(scalar *GG.Scalar, generator *GG.G1) (*GG.G1, error) {
+	point := new(GG.G1)
+	point.ScalarMult(scalar, generator)
+	if !point.IsOnG1() {
+		return nil, errors.New("invalid G1 point")
+	}
+	return point, nil
+}
+
+func AddG1Points(g1 *GG.G1, g2 *GG.G1) (*GG.G1, error) {
+	point := new(GG.G1)
+	point.Add(g1, g2)
+	if !point.IsOnG1() {
+		return nil, errors.New("invalid G1 point")
+	}
+	return point, nil
+}
+
 func GenerateG2Point(scalar *GG.Scalar, generator *GG.G2) (*GG.G2, error) {
 	point := new(GG.G2)
 	point.ScalarMult(scalar, generator)
+	if !point.IsOnG2() {
+		return nil, errors.New("invalid G2 point")
+	}
+	return point, nil
+}
+
+func AddG2Points(g1 *GG.G2, g2 *GG.G2) (*GG.G2, error) {
+	point := new(GG.G2)
+	point.Add(g1, g2)
 	if !point.IsOnG2() {
 		return nil, errors.New("invalid G2 point")
 	}

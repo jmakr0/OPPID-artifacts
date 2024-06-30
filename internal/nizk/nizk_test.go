@@ -14,29 +14,29 @@ func TestRandomizePSSignature(t *testing.T) {
 	randSig := randomizePSSignature(sig)
 
 	// Check that the signature is not nil
-	if randSig.sig == nil {
+	if randSig.randSig == nil {
 		t.Error("randomized signature is nil")
 	}
 
-	if randSig.sig.Sig1 == nil {
+	if randSig.randSig.Sig1 == nil {
 		t.Error("randomized signature Sig1 is nil")
 	}
 
-	if randSig.sig.Sig2 == nil {
+	if randSig.randSig.Sig2 == nil {
 		t.Error("randomized signature Sig2 is nil")
 	}
 
 	// Ensure that randomization has altered the signature
-	if sig.Sig1.IsEqual(randSig.sig.Sig1) {
+	if sig.Sig1.IsEqual(randSig.randSig.Sig1) {
 		t.Error("randomization did not change Sig1")
 	}
 
-	if sig.Sig2.IsEqual(randSig.sig.Sig2) {
+	if sig.Sig2.IsEqual(randSig.randSig.Sig2) {
 		t.Error("randomization did not change Sig2")
 	}
 }
 
-func TestNew(t *testing.T) {
+func TestNewVerify(t *testing.T) {
 	ps, _ := PS.New()
 	pc, _ := PC.New()
 
@@ -61,6 +61,9 @@ func TestNew(t *testing.T) {
 	aux := []byte("auxiliary data")
 	pi := New(witnesses, pubInput, aux)
 
+	// Call Verify with the generated proof
+	valid := Verify(pi, pubInput, aux)
+
 	// Ensure pi is not nil and all fields are populated
 	if pi == nil {
 		t.Error("pi is nil")
@@ -70,60 +73,64 @@ func TestNew(t *testing.T) {
 		t.Error("pi signature is nil")
 	}
 
-	if pi.anCom == nil {
-		t.Error("pi anCom is nil")
+	if pi.a1 == nil {
+		t.Error("pi a1 is nil")
 	}
 
-	if pi.anSig == nil {
-		t.Error("pi anSig is nil")
+	if pi.a2 == nil {
+		t.Error("pi a2 is nil")
 	}
 
-	if pi.resMsg == nil {
-		t.Error("pi resMsg is nil")
+	if pi.s1 == nil {
+		t.Error("pi s1 is nil")
 	}
 
-	if pi.resOpening == nil {
-		t.Error("pi resOpening is nil")
+	if pi.s2 == nil {
+		t.Error("pi s2 is nil")
 	}
 
-	if pi.resT == nil {
-		t.Error("pi resT is nil")
-	}
-}
-
-func TestVerify(t *testing.T) {
-	ps, _ := PS.New()
-	pc, _ := PC.New()
-
-	msg := []byte("Test")
-
-	sig, _ := ps.Sign(msg)
-	com, opening, _ := pc.Commit(msg)
-
-	witnesses := &Witnesses{
-		Msg:     msg,
-		Sig:     sig,
-		Opening: opening,
+	if pi.s3 == nil {
+		t.Error("pi s3 is nil")
 	}
 
-	pubInput := &PublicInputs{
-		PSParams: ps,
-		PCParams: pc,
-		Com:      com,
-	}
-
-	// Call New to generate the proof
-	aux := []byte("auxiliary data")
-	proof := New(witnesses, pubInput, aux)
-
-	// Call Verify with the generated proof
-	valid := Verify(proof, pubInput, aux)
-
-	// Ensure the proof is valid
 	if !valid {
 		t.Error("proof is not valid")
 	}
 }
+
+//func TestVerify(t *testing.T) {
+//	ps, _ := PS.New()
+//	pc, _ := PC.New()
+//
+//	msg := []byte("Test")
+//
+//	sig, _ := ps.Sign(msg)
+//	com, opening, _ := pc.Commit(msg)
+//
+//	witnesses := &Witnesses{
+//		Msg:     msg,
+//		Sig:     sig,
+//		Opening: opening,
+//	}
+//
+//	pubInput := &PublicInputs{
+//		PSParams: ps,
+//		PCParams: pc,
+//		Com:      com,
+//	}
+//
+//	// Call New to generate the proof
+//	aux := []byte("auxiliary data")
+//	proof := New(witnesses, pubInput, aux)
+//
+//	// Call Verify with the generated proof
+//	valid := Verify(proof, pubInput, aux)
+//
+//	// Ensure the proof is valid
+//	if !valid {
+//		t.Error("proof is not valid")
+//	}
+//}
 
 //func TestVerify_InvalidProof(t *testing.T) {
 //	// Mock Witnesses
@@ -165,7 +172,7 @@ func TestVerify(t *testing.T) {
 //	proof := New(witnesses, pubInput, aux)
 //
 //	// Modify the proof to make it invalid
-//	proof.resMsg = new(GG.Scalar).Random()
+//	proof.s1 = new(GG.Scalar).Random()
 //
 //	// Call Verify with the modified proof
 //	valid := Verify(proof, pubInput, aux)
