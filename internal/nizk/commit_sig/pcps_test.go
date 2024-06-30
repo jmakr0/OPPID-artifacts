@@ -1,7 +1,7 @@
-package nizk
+package commit_sig
 
 import (
-	PC "OPPID/internal/commit/pedersen"
+	PC "OPPID/internal/commit/pc"
 	PS "OPPID/internal/sign/ps"
 	"testing"
 )
@@ -19,20 +19,20 @@ func TestRandomizePSSignature(t *testing.T) {
 	}
 
 	if randSig.randSig.Sig1 == nil {
-		t.Error("randomized signature Sig1 is nil")
+		t.Error("randomized signature One is nil")
 	}
 
 	if randSig.randSig.Sig2 == nil {
-		t.Error("randomized signature Sig2 is nil")
+		t.Error("randomized signature Two is nil")
 	}
 
 	// Ensure that randomization has altered the signature
-	if sig.Sig1.IsEqual(randSig.randSig.Sig1) {
-		t.Error("randomization did not change Sig1")
+	if sig.One.IsEqual(randSig.randSig.Sig1) {
+		t.Error("randomization did not change One")
 	}
 
-	if sig.Sig2.IsEqual(randSig.randSig.Sig2) {
-		t.Error("randomization did not change Sig2")
+	if sig.Two.IsEqual(randSig.randSig.Sig2) {
+		t.Error("randomization did not change Two")
 	}
 }
 
@@ -99,13 +99,13 @@ func TestNewVerify(t *testing.T) {
 }
 
 //func TestVerify(t *testing.T) {
-//	ps, _ := PS.New()
-//	pc, _ := PC.New()
+//	sig, _ := PS.New()
+//	commit, _ := PC.New()
 //
 //	msg := []byte("Test")
 //
-//	sig, _ := ps.Sign(msg)
-//	com, opening, _ := pc.Commit(msg)
+//	sig, _ := sig.Sign(msg)
+//	com, opening, _ := commit.Commit(msg)
 //
 //	witnesses := &Witnesses{
 //		Msg:     msg,
@@ -114,8 +114,8 @@ func TestNewVerify(t *testing.T) {
 //	}
 //
 //	pubInput := &PublicInputs{
-//		PSParams: ps,
-//		PCParams: pc,
+//		PSParams: sig,
+//		PCParams: commit,
 //		Com:      com,
 //	}
 //
@@ -135,11 +135,11 @@ func TestNewVerify(t *testing.T) {
 //func TestVerify_InvalidProof(t *testing.T) {
 //	// Mock Witnesses
 //	msg := []byte("test message")
-//	psSig := &ps.Signature{
-//		Sig1: new(GG.G1).Random(),
-//		Sig2: new(GG.G1).Random(),
+//	psSig := &sig.Signature{
+//		One: new(GG.G1).Random(),
+//		Two: new(GG.G1).Random(),
 //	}
-//	opening := &pedersen.Opening{O: new(GG.Scalar).Random()}
+//	opening := &pc.Opening{O: new(GG.Scalar).Random()}
 //
 //	witnesses := &Witnesses{
 //		Msg:     msg,
@@ -148,16 +148,16 @@ func TestNewVerify(t *testing.T) {
 //	}
 //
 //	// Mock PublicInputs
-//	psParams := &ps.Params{
+//	psParams := &sig.Params{
 //		G: new(GG.G2).Random(),
 //		Y: new(GG.G2).Random(),
 //		X: new(GG.G2).Random(),
 //	}
-//	pcParams := &pedersen.Params{
+//	pcParams := &pc.Params{
 //		G: new(GG.G1).Random(),
 //		H: new(GG.G1).Random(),
 //	}
-//	com := &pedersen.Commitment{
+//	com := &pc.Commitment{
 //		C: new(GG.G1).Random(),
 //	}
 //

@@ -1,29 +1,26 @@
-package pedersen
+package pc
 
 import (
-	"crypto/rand"
+	"OPPID/internal/utils"
 	GG "github.com/cloudflare/circl/ecc/bls12381"
 	"testing"
 )
 
 func TestNew(t *testing.T) {
-	params, _ := New()
-	if !params.G.IsOnG1() {
+	pc := New()
+	if !pc.G.IsOnG1() {
 		t.Fatalf("G should be on G1")
 	}
-	if !params.H.IsOnG1() {
+	if !pc.H.IsOnG1() {
 		t.Fatalf("H should be on G1")
 	}
 }
 
 func TestCommitValidMessage(t *testing.T) {
-	pc, _ := New()
+	pc := New()
 	msg := []byte("test message")
 
-	commitment, opening, err := pc.Commit(msg)
-	if err != nil {
-		t.Fatalf("Failed to run commitment: %s", err)
-	}
+	commitment, opening := pc.Commit(msg)
 	if !commitment.C.IsOnG1() {
 		t.Fatalf("Commitment should be on G1")
 	}
@@ -33,10 +30,10 @@ func TestCommitValidMessage(t *testing.T) {
 }
 
 func TestOpenWithCorrectParameters(t *testing.T) {
-	pc, _ := New()
+	pc := New()
 	msg := []byte("test message")
 
-	commitment, opening, _ := pc.Commit(msg)
+	commitment, opening := pc.Commit(msg)
 	isValid := pc.Open(msg, commitment, opening)
 	if !isValid {
 		t.Fatalf("Open should validate the correct commitment")
@@ -44,10 +41,10 @@ func TestOpenWithCorrectParameters(t *testing.T) {
 }
 
 func TestOpenWithIncorrectMessage(t *testing.T) {
-	pc, _ := New()
+	pc := New()
 	msg := []byte("test message")
 
-	commitment, opening, _ := pc.Commit(msg)
+	commitment, opening := pc.Commit(msg)
 
 	invalidMsg := []byte("wrong message")
 	isValid := pc.Open(invalidMsg, commitment, opening)
@@ -57,13 +54,12 @@ func TestOpenWithIncorrectMessage(t *testing.T) {
 }
 
 func TestOpenWithIncorrectRandomness(t *testing.T) {
-	pc, _ := New()
+	pc := New()
 
 	msg := []byte("test message")
-	commitment, _, _ := pc.Commit(msg)
+	commitment, _ := pc.Commit(msg)
 
-	r := new(GG.Scalar)
-	_ = r.Random(rand.Reader)
+	r := utils.GenerateRandomScalar()
 
 	invalidRandomOpening := new(Opening)
 	invalidRandomOpening.O = r

@@ -1,4 +1,4 @@
-package ps
+package sig
 
 import (
 	PS "OPPID/internal/sign/ps"
@@ -6,7 +6,7 @@ import (
 )
 
 func TestNewVerify(t *testing.T) {
-	ps, _ := PS.New()
+	ps := PS.New()
 	msg := []byte("test")
 
 	sig, _ := ps.Sign(msg)

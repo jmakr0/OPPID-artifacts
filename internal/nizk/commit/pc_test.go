@@ -1,7 +1,7 @@
-package pc
+package commit
 
 import (
-	PC "OPPID/internal/commit/pedersen"
+	PC "OPPID/internal/commit/pc"
 	"testing"
 )
 
