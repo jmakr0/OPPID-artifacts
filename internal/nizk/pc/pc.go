@@ -30,20 +30,12 @@ func New(p *PublicInput, w *Witness) *Proof {
 	r1, _ := utils.GenerateRandomScalar()
 	r2, _ := utils.GenerateRandomScalar()
 
-	log.Println(p.params.G.String())
-
 	// Announcement
 	g := new(GG.G1)
 	g.ScalarMult(r1, p.params.G)
 
-	log.Println(p.params.G.String())
-
-	log.Println(p.params.H.String())
-
 	h := new(GG.G1)
 	h.ScalarMult(r2, p.params.H)
-
-	log.Println(p.params.H.String())
 
 	a := new(GG.G1)
 	a.Add(g, h)
@@ -87,12 +79,8 @@ func Verify(p *PublicInput, pi *Proof) bool {
 
 	z := utils.HashToScalar(challengeData, []byte(DST))
 
-	log.Println(p.params.G.String())
-
 	g := new(GG.G1)
 	g.ScalarMult(pi.s1, p.params.G)
-
-	log.Println(p.params.G.String())
 
 	h := new(GG.G1)
 	h.ScalarMult(pi.s2, p.params.H)
@@ -105,8 +93,6 @@ func Verify(p *PublicInput, pi *Proof) bool {
 
 	rhs := new(GG.G1)
 	rhs.Add(pi.A, c)
-
-	log.Println(lhs.String(), "|", rhs.String())
 
 	validCommitment := lhs.IsEqual(rhs)
 	if !validCommitment {
