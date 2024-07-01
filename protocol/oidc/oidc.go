@@ -55,10 +55,7 @@ func (o *OIDC) Response(rid []byte, uid []byte, ctx []byte, sid []byte) *Token {
 	tkBuf.Write(sid)
 
 	tkData := tkBuf.Bytes()
-	sigma, err := o.rsa.Sign(tkData)
-	if err != nil {
-		log.Fatalf("Failed to sign token: %s", err)
-	}
+	sigma := o.rsa.Sign(tkData)
 
 	return &Token{Sigma: sigma, ppid: subChecksum}
 }
