@@ -8,10 +8,10 @@ import (
 	"log"
 )
 
-const DST = "OPPID_BLS12384_XMD:SHA-256_NIZK_PS"
+const DSTStr = "OPPID_BLS12384_XMD:SHA-256_NIZK_PS"
 
 type PublicInput struct {
-	PSParams *PS.Params
+	PSParams *PS.PS
 }
 
 type Witness struct {
@@ -27,7 +27,7 @@ type Proof struct {
 }
 
 type RandomizedSignature struct {
-	BldValue *GG.Scalar
+	BldValue *GG.Scalar // corresponds to t
 	Sig      *PS.Signature
 }
 
@@ -67,10 +67,10 @@ func New(p *PublicInput, w *Witness) *Proof {
 	buff.Write(a1Bytes)
 
 	data := buff.Bytes()
-	z := utils.HashToScalar(data, []byte(DST))
+	z := utils.HashToScalar(data, []byte(DSTStr))
 
 	// Responses
-	m := utils.HashToScalar(w.msg, []byte(PS.DST))
+	m := utils.HashToScalar(w.msg, p.PSParams.DST)
 
 	mz := utils.MulScalars(&m, &z)
 	s1 := utils.AddScalars(u1, mz)
@@ -95,7 +95,7 @@ func Verify(p *PublicInput, pi *Proof) bool {
 	buff.Write(a1Bytes)
 
 	data := buff.Bytes()
-	z := utils.HashToScalar(data, []byte(DST))
+	z := utils.HashToScalar(data, []byte(DSTStr))
 
 	z1 := utils.GenerateG1Point(&z, pi.randSig.Two)
 

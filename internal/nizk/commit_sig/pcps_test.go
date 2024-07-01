@@ -2,67 +2,59 @@ package commit_sig
 
 import (
 	PC "OPPID/internal/commit/pc"
+	NIZK_PS "OPPID/internal/nizk/sig"
 	PS "OPPID/internal/sign/ps"
 	"testing"
 )
 
 func TestRandomizePSSignature(t *testing.T) {
-	ps, _ := PS.New()
-	sig, _ := ps.Sign([]byte("Test"))
+	ps := PS.New("")
+	sig := ps.Sign([]byte("Test"))
 
 	// Call randomizePSSignature
-	randSig := randomizePSSignature(sig)
+	randSig := NIZK_PS.Randomize(sig)
 
 	// Check that the signature is not nil
-	if randSig.randSig == nil {
+	if randSig.Sig == nil {
 		t.Error("randomized signature is nil")
 	}
 
-	if randSig.randSig.Sig1 == nil {
+	if randSig.Sig.One == nil {
 		t.Error("randomized signature One is nil")
 	}
 
-	if randSig.randSig.Sig2 == nil {
+	if randSig.Sig.Two == nil {
 		t.Error("randomized signature Two is nil")
 	}
 
 	// Ensure that randomization has altered the signature
-	if sig.One.IsEqual(randSig.randSig.Sig1) {
-		t.Error("randomization did not change One")
+	if sig.One.IsEqual(randSig.Sig.One) {
+		t.Error("randomization did not change sig1")
 	}
 
-	if sig.Two.IsEqual(randSig.randSig.Sig2) {
-		t.Error("randomization did not change Two")
+	if sig.Two.IsEqual(randSig.Sig.Two) {
+		t.Error("randomization did not change sig2")
 	}
 }
 
 func TestNewVerify(t *testing.T) {
-	ps, _ := PS.New()
-	pc, _ := PC.New()
+	ps := PS.New(DSTStr)
+	pc := PC.New(DSTStr)
 
 	msg := []byte("Test")
 
-	sig, _ := ps.Sign(msg)
-	com, opening, _ := pc.Commit(msg)
+	sig := ps.Sign(msg)
+	com, opening := pc.Commit(msg)
 
-	witnesses := &Witnesses{
-		Msg:     msg,
-		Sig:     sig,
-		Opening: opening,
-	}
+	w := &Witnesses{Msg: msg, Sig: sig, Opening: opening}
 
-	pubInput := &PublicInputs{
-		PSParams: ps,
-		PCParams: pc,
-		Com:      com,
-	}
+	p := &PublicInputs{PSParams: ps, PCParams: pc, Com: com}
 
-	// Call New to generate the pi
+	// Call New to generate the proof
 	aux := []byte("auxiliary data")
-	pi := New(witnesses, pubInput, aux)
+	pi := New(w, p, aux)
 
-	// Call Verify with the generated proof
-	valid := Verify(pi, pubInput, aux)
+	isValid := Verify(pi, p, aux)
 
 	// Ensure pi is not nil and all fields are populated
 	if pi == nil {
@@ -93,8 +85,8 @@ func TestNewVerify(t *testing.T) {
 		t.Error("pi s3 is nil")
 	}
 
-	if !valid {
-		t.Error("proof is not valid")
+	if !isValid {
+		t.Error("proof is not isValid")
 	}
 }
 
@@ -148,12 +140,12 @@ func TestNewVerify(t *testing.T) {
 //	}
 //
 //	// Mock PublicInputs
-//	psParams := &sig.Params{
+//	psParams := &sig.PS{
 //		G: new(GG.G2).Random(),
 //		Y: new(GG.G2).Random(),
 //		X: new(GG.G2).Random(),
 //	}
-//	pcParams := &pc.Params{
+//	pcParams := &pc.PS{
 //		G: new(GG.G1).Random(),
 //		H: new(GG.G1).Random(),
 //	}

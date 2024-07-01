@@ -10,7 +10,7 @@ import (
 	"log"
 )
 
-const DST = "OPPID_BLS12384_XMD:SHA-256_NIZK_PC_PS"
+const DSTStr = "OPPID_BLS12384_XMD:SHA-256_NIZK_PC_PS"
 
 type Witnesses struct {
 	Msg     []byte
@@ -19,8 +19,8 @@ type Witnesses struct {
 }
 
 type PublicInputs struct {
-	PSParams *ps.Params
-	PCParams *PC.Params
+	PSParams *ps.PS
+	PCParams *PC.PC
 	Com      *PC.Commitment
 }
 
@@ -63,10 +63,10 @@ func New(w *Witnesses, p *PublicInputs, aux []byte) *Proof {
 
 	data := buf.Bytes()
 
-	z := utils.HashToScalar(data, []byte(DST)) // challenge is hash of data
+	z := utils.HashToScalar(data, []byte(DSTStr)) // challenge is hash of data
 
 	// Responses
-	m := utils.HashToScalar(w.Msg, []byte(PC.DST))
+	m := utils.HashToScalar(w.Msg, p.PCParams.DST)
 
 	mz := utils.MulScalars(&m, &z)
 	s1 := utils.AddScalars(u1, mz)
@@ -74,7 +74,7 @@ func New(w *Witnesses, p *PublicInputs, aux []byte) *Proof {
 	o := utils.MulScalars(w.Opening.O, &z)
 	s2 := utils.AddScalars(u2, o)
 
-	tz := utils.MulScalars(randSig.t, &z)
+	tz := utils.MulScalars(randSig.BldValue, &z)
 	s3 := utils.AddScalars(u3, tz)
 
 	return &Proof{
@@ -97,7 +97,7 @@ func Verify(pi *Proof, pubInput *PublicInputs, aux []byte) bool {
 
 	data := buff.Bytes()
 
-	z := utils.HashToScalar(data, []byte(DST))
+	z := utils.HashToScalar(data, []byte(DSTStr))
 
 	// Verify commitment
 	g := utils.GenerateG1Point(pi.s1, pubInput.PCParams.G)

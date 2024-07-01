@@ -7,7 +7,7 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	pc := New()
+	pc := New("")
 	if !pc.G.IsOnG1() {
 		t.Fatalf("G should be on G1")
 	}
@@ -17,7 +17,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestCommitValidMessage(t *testing.T) {
-	pc := New()
+	pc := New("")
 	msg := []byte("test message")
 
 	commitment, opening := pc.Commit(msg)
@@ -30,7 +30,7 @@ func TestCommitValidMessage(t *testing.T) {
 }
 
 func TestOpenWithCorrectParameters(t *testing.T) {
-	pc := New()
+	pc := New("")
 	msg := []byte("test message")
 
 	commitment, opening := pc.Commit(msg)
@@ -41,7 +41,7 @@ func TestOpenWithCorrectParameters(t *testing.T) {
 }
 
 func TestOpenWithIncorrectMessage(t *testing.T) {
-	pc := New()
+	pc := New("")
 	msg := []byte("test message")
 
 	commitment, opening := pc.Commit(msg)
@@ -54,7 +54,7 @@ func TestOpenWithIncorrectMessage(t *testing.T) {
 }
 
 func TestOpenWithIncorrectRandomness(t *testing.T) {
-	pc := New()
+	pc := New("Test_DST")
 
 	msg := []byte("test message")
 	commitment, _ := pc.Commit(msg)

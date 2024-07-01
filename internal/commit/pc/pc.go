@@ -6,12 +6,13 @@ import (
 	"log"
 )
 
-const DST = "OPPID_BLS12384_XMD:SHA-256_COM_PC"
+const DSTStr = "OPPID_BLS12384_XMD:SHA-256_COM_PC"
 
-// Params holds the parameters for the BLS12-381 curve.
-type Params struct {
-	G *GG.G1
-	H *GG.G1
+// PC holds the parameters for the BLS12-381 curve.
+type PC struct {
+	G   *GG.G1
+	H   *GG.G1
+	DST []byte
 }
 
 type Commitment struct {
@@ -23,17 +24,22 @@ type Opening struct {
 }
 
 // New initializes and returns the curve parameters
-func New() *Params {
+func New(dst string) *PC {
 	r := utils.GenerateRandomScalar()
 	g := GG.G1Generator()
 	h := utils.GenerateG1Point(r, g)
 
-	return &Params{G: g, H: h}
+	pc := &PC{G: g, H: h, DST: []byte(dst)}
+	if dst == "" {
+		pc.DST = []byte(DSTStr)
+	}
+
+	return pc
 }
 
 // Commit computes the Pedersen commit C = mG + oH
-func (p *Params) Commit(msg []byte) (*Commitment, *Opening) {
-	m := utils.HashToScalar(msg, []byte(DST))
+func (p *PC) Commit(msg []byte) (*Commitment, *Opening) {
+	m := utils.HashToScalar(msg, p.DST)
 	o := utils.GenerateRandomScalar()
 
 	g := utils.GenerateG1Point(&m, p.G)
@@ -47,8 +53,8 @@ func (p *Params) Commit(msg []byte) (*Commitment, *Opening) {
 	return &Commitment{C: c}, &Opening{O: o}
 }
 
-func (p *Params) Open(msg []byte, commitment *Commitment, opening *Opening) bool {
-	m := utils.HashToScalar(msg, []byte(DST))
+func (p *PC) Open(msg []byte, commitment *Commitment, opening *Opening) bool {
+	m := utils.HashToScalar(msg, p.DST)
 
 	g := utils.GenerateG1Point(&m, p.G)
 	h := utils.GenerateG1Point(opening.O, p.H)

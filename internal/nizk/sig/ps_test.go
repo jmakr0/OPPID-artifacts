@@ -6,10 +6,10 @@ import (
 )
 
 func TestNewVerify(t *testing.T) {
-	ps := PS.New()
+	ps := PS.New("")
 	msg := []byte("test")
 
-	sig, _ := ps.Sign(msg)
+	sig := ps.Sign(msg)
 
 	p := &PublicInput{PSParams: ps}
 	w := &Witness{msg: msg, sig: sig}

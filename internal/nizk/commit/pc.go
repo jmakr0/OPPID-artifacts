@@ -18,7 +18,7 @@ type Witness struct {
 }
 
 type PublicInput struct {
-	params *PC.Params
+	params *PC.PC
 	com    *PC.Commitment
 }
 
@@ -49,7 +49,7 @@ func New(p *PublicInput, w *Witness) *Proof {
 	z := utils.HashToScalar(data, []byte(DST))
 
 	// Responses
-	m := utils.HashToScalar(w.msg, []byte(PC.DST))
+	m := utils.HashToScalar(w.msg, []byte(PC.DSTStr))
 
 	mz := utils.MulScalars(&m, &z)
 	s1 := utils.AddScalars(u1, mz)

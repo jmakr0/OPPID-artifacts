@@ -6,10 +6,10 @@ import (
 )
 
 func TestNewVerify(t *testing.T) {
-	pc, _ := PC.New()
-	msg := []byte("test")
+	pc := PC.New()
 
-	commit, o, _ := pc.Commit(msg)
+	msg := []byte("test")
+	commit, o := pc.Commit(msg)
 
 	p := &PublicInput{params: pc, com: commit}
 	w := &Witness{msg: msg, opening: o}

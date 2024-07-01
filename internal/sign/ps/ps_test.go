@@ -6,36 +6,29 @@ import (
 )
 
 func TestNewParams(t *testing.T) {
-	params, err := New()
-	if err != nil {
-		t.Fatalf("Failed to initialize parameters: %v", err)
-	}
-	if !params.X.IsOnG2() || !params.Y.IsOnG2() {
+	ps := New("")
+
+	if !ps.X.IsOnG2() || !ps.Y.IsOnG2() {
 		t.Fatalf("Generated points are not on G2 curve")
 	}
 }
 
 func TestSign(t *testing.T) {
-	ps, _ := New()
+	ps := New("")
 
 	msg := []byte("test message")
-	sig, err := ps.Sign(msg)
-	if err != nil {
-		t.Fatalf("Failed to sign message: %v", err)
-	}
+	sig := ps.Sign(msg)
+
 	if !sig.One.IsOnG1() || !sig.Two.IsOnG1() {
 		t.Fatalf("Signature points are not on G1 curve")
 	}
 }
 
 func TestVerify(t *testing.T) {
-	ps, _ := New()
+	ps := New("")
 
 	msg := []byte("test message")
-	sig, err := ps.Sign(msg)
-	if err != nil {
-		t.Fatalf("Failed to sign message: %v", err)
-	}
+	sig := ps.Sign(msg)
 
 	isValid, err := ps.Verify(msg, *sig)
 	if err != nil || !isValid {
@@ -51,13 +44,10 @@ func TestVerify(t *testing.T) {
 }
 
 func TestVerifyEdgeCases(t *testing.T) {
-	ps, _ := New()
+	ps := New("")
 
 	msg := []byte("test message")
-	sig, err := ps.Sign(msg)
-	if err != nil {
-		t.Fatalf("Failed to sign message: %v", err)
-	}
+	sig := ps.Sign(msg)
 
 	// Test with identity point
 	identitySig := Signature{
