@@ -1,4 +1,4 @@
-package commit_sig
+package commitsig
 
 import (
 	PC "OPPID/internal/commit/pc"
@@ -62,7 +62,6 @@ func New(w *Witnesses, p *PublicInputs, aux []byte) *Proof {
 	buf.Write(aux)
 
 	data := buf.Bytes()
-
 	z := utils.HashToScalar(data, []byte(DSTStr)) // challenge is hash of data
 
 	// Responses

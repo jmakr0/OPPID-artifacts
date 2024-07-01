@@ -5,11 +5,8 @@ import (
 	"testing"
 )
 
-func TestOIDC_ResponseAndVerify(t *testing.T) {
-	oidc, err := Setup(2048)
-	if err != nil {
-		t.Fatalf("Failed to create OIDC instance: %s", err)
-	}
+func TestOIDCResponseAndVerify(t *testing.T) {
+	oidc := New(2048)
 
 	rid := []byte("Test-RP")
 	uid := []byte("alice.doe@idp.com")
@@ -19,22 +16,16 @@ func TestOIDC_ResponseAndVerify(t *testing.T) {
 	_, _ = rand.Read(ctx[:])
 	_, _ = rand.Read(sid[:])
 
-	tk, err := oidc.Response(rid, uid, ctx[:], sid[:])
-	if err != nil {
-		t.Fatalf("Failed to create response: %s", err)
-	}
+	tk := oidc.Response(rid, uid, ctx[:], sid[:])
 
 	isValid := oidc.Verify(rid, tk.ppid, ctx[:], sid[:], tk.Sigma)
 	if !isValid {
-		t.Fatalf("Failed to verify response: %s", err)
+		t.Fatalf("Token is not valid")
 	}
 }
 
-func TestOIDC_ResponseAndVerify_InvalidInputs(t *testing.T) {
-	oidc, err := Setup(2048)
-	if err != nil {
-		t.Fatalf("Failed to create OIDC instance: %s", err)
-	}
+func TestOIDCResponseAndVerifyInvalidInputs(t *testing.T) {
+	oidc := New(2048)
 
 	rid := []byte("Test-RP")
 	uid := []byte("alice.doe@idp.com")
@@ -44,10 +35,7 @@ func TestOIDC_ResponseAndVerify_InvalidInputs(t *testing.T) {
 	_, _ = rand.Read(ctx[:])
 	_, _ = rand.Read(sid[:])
 
-	tk, err := oidc.Response(rid, uid, ctx[:], sid[:])
-	if err != nil {
-		t.Fatalf("Failed to create response: %s", err)
-	}
+	tk := oidc.Response(rid, uid, ctx[:], sid[:])
 
 	// Modify one byte of the sign to simulate an invalid sign
 	tk.Sigma[0] ^= 0xFF

@@ -1,0 +1,5 @@
+package aifzkp
+
+func New() {
+
+}

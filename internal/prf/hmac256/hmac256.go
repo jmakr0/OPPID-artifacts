@@ -4,18 +4,19 @@ import (
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
+	"log"
 )
 
 type PRF struct {
 	K []byte
 }
 
-func New() (*PRF, error) {
+func New() *PRF {
 	k := make([]byte, 32)
 	if _, err := rand.Read(k); err != nil {
-		return nil, err
+		log.Fatalf("Fatal error creating random HmacPRF key: %v", err)
 	}
-	return &PRF{K: k}, nil
+	return &PRF{K: k}
 }
 
 func (prf *PRF) Eval(msg []byte) []byte {

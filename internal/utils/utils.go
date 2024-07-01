@@ -84,14 +84,19 @@ func AddG2Points(g1 *GG.G2, g2 *GG.G2) *GG.G2 {
 	return point
 }
 
-func ScalarToBytes(scalar *GG.Scalar) ([]byte, error) {
+func ScalarToBytes(scalar *GG.Scalar) []byte {
 	hexString := scalar.String()
 	// Check if the string starts with "0x" and remove it
 	if strings.HasPrefix(hexString, "0x") {
 		hexString = hexString[2:]
 	}
 
-	return hex.DecodeString(hexString)
+	bytes, err := hex.DecodeString(hexString)
+	if err != nil {
+		log.Fatalf("Fatal error decoding string to bytes: %v", err)
+	}
+
+	return bytes
 }
 
 func BytesToScalar(data []byte) *GG.Scalar {

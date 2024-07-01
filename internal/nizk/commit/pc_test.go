@@ -6,7 +6,7 @@ import (
 )
 
 func TestNewVerify(t *testing.T) {
-	pc := PC.New()
+	pc := PC.New("")
 
 	msg := []byte("test")
 	commit, o := pc.Commit(msg)

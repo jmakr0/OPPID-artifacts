@@ -5,13 +5,12 @@ import (
 	"bytes"
 	"crypto/rand"
 	"crypto/sha256"
-	"fmt"
 	"log"
 )
 
 type OIDC struct {
-	RSA  *rsa256.RSA256
-	Salt [32]byte
+	rsa  *rsa256.RSA256
+	salt [32]byte
 }
 
 type Token struct {
@@ -19,61 +18,49 @@ type Token struct {
 	ppid  []byte
 }
 
-func Setup(keySize int) (*OIDC, error) {
-	rsa, err := rsa256.New(keySize)
+func New(keySize int) *OIDC {
+	rsa := rsa256.New(keySize)
+	var salt [32]byte
+
+	_, err := rand.Read(salt[:])
 	if err != nil {
-		log.Fatalf("Failed to create RSA key pair: %s", err)
+		log.Fatalf("Failed to generate random salt: %v", err)
 	}
 
-	var randomSalt [32]byte
-	_, err = rand.Read(randomSalt[:])
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate random key: %v", err)
-	}
-
-	return &OIDC{
-		RSA:  rsa,
-		Salt: randomSalt,
-	}, nil
+	return &OIDC{rsa: rsa, salt: salt}
 }
 
-func (o *OIDC) Response(rid []byte, uid []byte, ctx []byte, sid []byte) (*Token, error) {
-	// Create a subBuffer to concatenate the input
-	var subBuffer bytes.Buffer
+func (o *OIDC) Response(rid []byte, uid []byte, ctx []byte, sid []byte) *Token {
+	var subBuf bytes.Buffer
 
-	// Write the subject identifier data to buffer
-	subBuffer.Write(rid)
-	subBuffer.Write(uid)
-	subBuffer.Write(o.Salt[:])
+	// Write the subject identifier tkBuf to buffer
+	subBuf.Write(rid)
+	subBuf.Write(uid)
+	subBuf.Write(o.salt[:])
 
 	// Get the concatenated byte slice
-	subData := subBuffer.Bytes()
+	subData := subBuf.Bytes()
 
 	subHash := sha256.New()
 	subHash.Write(subData)
 	subChecksum := subHash.Sum(nil) // ppid
-	//hexSubChecksum := fmt.Sprintf("%x", subChecksum)
 
-	// Create buffer to concatenate token data
-	var tkBuffer bytes.Buffer
+	// Create buffer to concatenate token tkBuf
+	var tkBuf bytes.Buffer
 
-	// Write token data to buffer
-	tkBuffer.Write(rid)
-	tkBuffer.Write(subChecksum)
-	tkBuffer.Write(ctx)
-	tkBuffer.Write(sid)
+	// Write token tkBuf to buffer
+	tkBuf.Write(rid)
+	tkBuf.Write(subChecksum)
+	tkBuf.Write(ctx)
+	tkBuf.Write(sid)
 
-	tkData := tkBuffer.Bytes()
-	sigma, err := o.RSA.Sign(tkData)
+	tkData := tkBuf.Bytes()
+	sigma, err := o.rsa.Sign(tkData)
 	if err != nil {
 		log.Fatalf("Failed to sign token: %s", err)
 	}
 
-	return &Token{
-		Sigma: sigma,
-		ppid:  subChecksum,
-	}, nil
-
+	return &Token{Sigma: sigma, ppid: subChecksum}
 }
 
 func (o *OIDC) Verify(rid []byte, ppid []byte, ctx []byte, sid []byte, sigma []byte) bool {
@@ -86,5 +73,5 @@ func (o *OIDC) Verify(rid []byte, ppid []byte, ctx []byte, sid []byte, sigma []b
 
 	tkData := tkBuffer.Bytes()
 
-	return o.RSA.Verify(tkData, sigma)
+	return o.rsa.Verify(tkData, sigma)
 }

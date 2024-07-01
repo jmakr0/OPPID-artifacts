@@ -10,6 +10,6 @@ func TestFK_Eval(t *testing.T) {
 
 	y := fk.Eval(msg, k)
 	if y.IsIdentity() || !y.IsOnG1() {
-		t.Fatalf("PRF output is invalid")
+		t.Fatalf("HmacPRF output is invalid")
 	}
 }

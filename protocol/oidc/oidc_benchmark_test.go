@@ -7,10 +7,7 @@ import (
 )
 
 func BenchmarkOIDC_Response(b *testing.B) {
-	oidc, err := Setup(2048)
-	if err != nil {
-		b.Fatalf("Failed to create OIDC instance: %s", err)
-	}
+	oidc := New(2048)
 
 	rid := []byte("Test-RP")
 	uid := []byte("alice.doe@idp.com")
@@ -24,10 +21,7 @@ func BenchmarkOIDC_Response(b *testing.B) {
 	start := time.Now()
 
 	for i := 0; i < b.N; i++ {
-		_, err := oidc.Response(rid, uid, ctx[:], sid[:])
-		if err != nil {
-			b.Fatalf("Failed to create response: %s", err)
-		}
+		oidc.Response(rid, uid, ctx[:], sid[:])
 	}
 
 	elapsed := time.Since(start)
@@ -35,10 +29,7 @@ func BenchmarkOIDC_Response(b *testing.B) {
 }
 
 func BenchmarkOIDC_Verify(b *testing.B) {
-	oidc, err := Setup(2048)
-	if err != nil {
-		b.Fatalf("Failed to create OIDC instance: %s", err)
-	}
+	oidc := New(2048)
 
 	rid := []byte("Test-RP")
 	uid := []byte("alice.doe@idp.com")
@@ -48,10 +39,7 @@ func BenchmarkOIDC_Verify(b *testing.B) {
 	_, _ = rand.Read(ctx[:])
 	_, _ = rand.Read(sid[:])
 
-	tk, err := oidc.Response(rid, uid, ctx[:], sid[:])
-	if err != nil {
-		b.Fatalf("Failed to create response: %s", err)
-	}
+	tk := oidc.Response(rid, uid, ctx[:], sid[:])
 
 	b.ResetTimer()
 	start := time.Now()
@@ -59,7 +47,7 @@ func BenchmarkOIDC_Verify(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		isValid := oidc.Verify(rid, tk.ppid, ctx[:], sid[:], tk.Sigma)
 		if !isValid {
-			b.Fatalf("Failed to verify response: %s", err)
+			b.Fatalf("Failed to verify response")
 		}
 	}
 

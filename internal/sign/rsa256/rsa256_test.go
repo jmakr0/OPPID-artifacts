@@ -2,68 +2,42 @@ package rsa256
 
 import "testing"
 
-func TestRSA256_SignAndVerify(t *testing.T) {
-	// Create a new RSAWrapper with a 2048-bit key
-	rsa256, err := New(2048)
-	if err != nil {
-		t.Fatalf("Failed to create RSA wrapper: %s", err)
-	}
+func TestRSA256SignAndVerify(t *testing.T) {
+	rsa256 := New(2048)
 
 	message := []byte("Hello, World!")
-
-	signature, err := rsa256.Sign(message)
-	if err != nil {
-		t.Fatalf("Failed to sign message: %s", err)
-	}
+	signature := rsa256.Sign(message)
 
 	isValid := rsa256.Verify(message, signature)
 	if !isValid {
-		t.Fatalf("Failed to verify sign: %s", err)
+		t.Fatalf("Expacted signature to be valid")
 	}
 }
 
-func TestRSAWrapper_BadSignature(t *testing.T) {
-	// Create a new RSAWrapper with a 2048-bit key
-	rsa256, err := New(2048)
-	if err != nil {
-		t.Fatalf("Failed to create RSA wrapper: %s", err)
-	}
+func TestRSAWrapperBadSignature(t *testing.T) {
+	rsa256 := New(2048)
 
 	message := []byte("Hello, World!")
-
-	signature, err := rsa256.Sign(message)
-	if err != nil {
-		t.Fatalf("Failed to sign message: %s", err)
-	}
+	signature := rsa256.Sign(message)
 
 	// Modify the sign (simulating a bad sign)
 	signature[0] ^= 0xFF
 
-	// Verify the modified sign (should fail)
 	isValid := rsa256.Verify(message, signature)
 	if isValid {
-		t.Fatalf("Expected sign verification to fail, but succeeded")
+		t.Fatalf("Expected signature verification to fail, but succeeded")
 	}
 }
 
-func TestRSAWrapper_BadMessage(t *testing.T) {
-	// Create a new RSAWrapper with a 2048-bit key
-	rsa256, err := New(2048)
-	if err != nil {
-		t.Fatalf("Failed to create RSA wrapper: %s", err)
-	}
+func TestRSAWrapperBadMessage(t *testing.T) {
+	rsa256 := New(2048)
 
 	message := []byte("Hello, World!")
-
-	signature, err := rsa256.Sign(message)
-	if err != nil {
-		t.Fatalf("Failed to sign message: %s", err)
-	}
+	signature := rsa256.Sign(message)
 
 	// Modify the message (simulating a different message)
 	message[0] ^= 0xFF
 
-	// Verify the sign with the modified message (should fail)
 	isValid := rsa256.Verify(message, signature)
 	if isValid {
 		t.Fatalf("Expected sign verification to fail with modified message, but succeeded")
