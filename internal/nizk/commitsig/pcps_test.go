@@ -73,16 +73,16 @@ func TestNewVerify(t *testing.T) {
 		t.Error("pi a2 is nil")
 	}
 
-	if pi.s1 == nil {
-		t.Error("pi s1 is nil")
+	if pi.r1 == nil {
+		t.Error("pi r1 is nil")
 	}
 
-	if pi.s2 == nil {
-		t.Error("pi s2 is nil")
+	if pi.r2 == nil {
+		t.Error("pi r2 is nil")
 	}
 
-	if pi.s3 == nil {
-		t.Error("pi s3 is nil")
+	if pi.r3 == nil {
+		t.Error("pi r3 is nil")
 	}
 
 	if !isValid {
@@ -107,7 +107,7 @@ func TestVerify_InvalidProof(t *testing.T) {
 	proof := New(w, p, aux)
 
 	// Modify the proof to make it invalid
-	proof.s1 = utils.GenerateRandomScalar()
+	proof.r1 = utils.GenerateRandomScalar()
 
 	// Call Verify with the modified proof
 	isValid := Verify(proof, p, aux)

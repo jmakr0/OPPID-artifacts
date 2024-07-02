@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func BenchmarkOIDC_Response(b *testing.B) {
+func BenchmarkOIDCResponse(b *testing.B) {
 	oidc := New(2048)
 
 	rid := []byte("Test-RP")
@@ -28,7 +28,7 @@ func BenchmarkOIDC_Response(b *testing.B) {
 	b.ReportMetric(float64(elapsed.Milliseconds())/float64(b.N), "ms/op")
 }
 
-func BenchmarkOIDC_Verify(b *testing.B) {
+func BenchmarkOIDCVerify(b *testing.B) {
 	oidc := New(2048)
 
 	rid := []byte("Test-RP")

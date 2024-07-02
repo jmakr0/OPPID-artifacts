@@ -28,9 +28,9 @@ type Proof struct {
 	sig *ps.Signature // randomized signature
 	a1  *GG.G1
 	a2  *GG.Gt
-	s1  *GG.Scalar
-	s2  *GG.Scalar
-	s3  *GG.Scalar
+	r1  *GG.Scalar
+	r2  *GG.Scalar
+	r3  *GG.Scalar
 }
 
 func New(w *Witnesses, p *PublicInputs, aux []byte) *Proof {
@@ -80,9 +80,9 @@ func New(w *Witnesses, p *PublicInputs, aux []byte) *Proof {
 		sig: randSig.Sig,
 		a1:  a1,
 		a2:  a2,
-		s1:  s1,
-		s2:  s2,
-		s3:  s3,
+		r1:  s1,
+		r2:  s2,
+		r3:  s3,
 	}
 }
 
@@ -99,10 +99,10 @@ func Verify(pi *Proof, pubInput *PublicInputs, aux []byte) bool {
 	z := utils.HashToScalar(data, []byte(DSTStr))
 
 	// Verify commitment
-	g := utils.GenerateG1Point(pi.s1, pubInput.PCParams.G)
-	h := utils.GenerateG1Point(pi.s2, pubInput.PCParams.H)
+	g := utils.GenerateG1Point(pi.r1, pubInput.PCParams.G)
+	h := utils.GenerateG1Point(pi.r2, pubInput.PCParams.H)
 
-	lhs1 := utils.AddG1Points(g, h) // lhs1 = g^s1 * h^s2 = g^(u1+m*z) * h^(u2+o*z)
+	lhs1 := utils.AddG1Points(g, h) // lhs1 = g^r1 * h^r2 = g^(u1+m*z) * h^(u2+o*z)
 
 	c := utils.GenerateG1Point(&z, pubInput.Com.C)
 
@@ -130,8 +130,8 @@ func Verify(pi *Proof, pubInput *PublicInputs, aux []byte) bool {
 	lhsP4 := new(GG.Gt)
 	lhsP4.Mul(lhsP3, pi.a2)
 
-	gt := utils.GenerateG2Point(pi.s3, pubInput.PSParams.G)
-	ym := utils.GenerateG2Point(pi.s1, pubInput.PSParams.Y)
+	gt := utils.GenerateG2Point(pi.r3, pubInput.PSParams.G)
+	ym := utils.GenerateG2Point(pi.r1, pubInput.PSParams.Y)
 
 	rhsG2 := utils.AddG2Points(ym, gt)
 
