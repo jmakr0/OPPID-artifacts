@@ -4,7 +4,7 @@ package aifzkp
 
 import (
 	PC "OPPID/pkg/commit/pc"
-	NIZK "OPPID/pkg/nizk/commitsig"
+	NIZK "OPPID/pkg/nizk/comsig"
 	PS "OPPID/pkg/sign/ps"
 	"OPPID/pkg/sign/rsa256"
 	"OPPID/pkg/utils"

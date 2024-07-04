@@ -1,4 +1,4 @@
-package commit
+package com
 
 import (
 	PC "OPPID/pkg/commit/pc"

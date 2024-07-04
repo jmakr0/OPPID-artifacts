@@ -1,4 +1,4 @@
-package commitsig
+package comsig
 
 import (
 	PC "OPPID/pkg/commit/pc"

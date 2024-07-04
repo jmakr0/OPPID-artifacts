@@ -1,6 +1,6 @@
 // This package provides a NIZK for pc commitments
 
-package commit
+package com
 
 import (
 	PC "OPPID/pkg/commit/pc"
