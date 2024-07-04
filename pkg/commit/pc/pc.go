@@ -6,55 +6,51 @@ import (
 	"log"
 )
 
-const DSTStr = "OPPID_BLS12384_XMD:SHA-256_COM_PC"
+const dstStr = "OPPID_BLS12384_XMD:SHA-256_COM_PC_"
 
-// PC holds the parameters for the BLS12-381 curve.
-type PC struct {
+type PublicParams struct {
 	G   *GG.G1
 	H   *GG.G1
 	DST []byte
 }
 
-type Commitment struct{ C *GG.G1 }
+type Commitment struct{ Element *GG.G1 }
+type Opening struct{ Scalar *GG.Scalar }
 
-type Opening struct{ O *GG.Scalar }
-
-// New initializes and returns the curve parameters
-func New(dst string) *PC {
+func Setup(dst []byte) *PublicParams {
 	r := utils.GenerateRandomScalar()
 	g := GG.G1Generator()
 	h := utils.GenerateG1Point(r, g)
 
-	pc := &PC{G: g, H: h, DST: []byte(dst)}
-	if dst == "" {
-		pc.DST = []byte(DSTStr)
+	if dst == nil {
+		return &PublicParams{g, h, []byte(dstStr)}
 	}
-
-	return pc
+	return &PublicParams{g, h, dst}
 }
 
-// Commit computes the Pedersen commit C = mG + oH
-func (p *PC) Commit(msg []byte) (*Commitment, *Opening) {
+func (p *PublicParams) Commit(msg []byte) (Commitment, Opening) {
 	m := utils.HashToScalar(msg, p.DST)
-	o := utils.GenerateRandomScalar()
-
 	g := utils.GenerateG1Point(&m, p.G)
-	h := utils.GenerateG1Point(o, p.H)
-	c := utils.AddG1Points(g, h)
 
-	if !c.IsOnG1() || o.IsZero() == 1 {
+	var o Opening
+	o.Scalar = utils.GenerateRandomScalar()
+	h := utils.GenerateG1Point(o.Scalar, p.H)
+
+	var c Commitment
+	c.Element = utils.AddG1Points(g, h)
+
+	if !c.Element.IsOnG1() || o.Scalar.IsZero() == 1 {
 		log.Fatalf("Fatal error: invalid commitment")
 	}
 
-	return &Commitment{C: c}, &Opening{O: o}
+	return c, o
 }
 
-func (p *PC) Open(msg []byte, commitment *Commitment, opening *Opening) bool {
+func (p *PublicParams) Open(msg []byte, c *Commitment, o *Opening) bool {
 	m := utils.HashToScalar(msg, p.DST)
-
 	g := utils.GenerateG1Point(&m, p.G)
-	h := utils.GenerateG1Point(opening.O, p.H)
-	c := utils.AddG1Points(g, h)
+	h := utils.GenerateG1Point(o.Scalar, p.H)
+	c1 := utils.AddG1Points(g, h)
 
-	return c.IsEqual(commitment.C)
+	return c1.IsEqual(c.Element)
 }

@@ -20,7 +20,7 @@ type Witnesses struct {
 
 type PublicInputs struct {
 	PSParams *ps.PublicParams
-	PCParams *PC.PC
+	PCParams *PC.PublicParams
 	Com      *PC.Commitment
 }
 
@@ -56,7 +56,7 @@ func New(w *Witnesses, p *PublicInputs, aux []byte) *Proof {
 	// Challenge
 	var buf bytes.Buffer
 
-	buf.WriteString(p.Com.C.String())
+	buf.WriteString(p.Com.Element.String())
 	buf.WriteString(a1.String())
 	buf.WriteString(a2.String())
 	buf.Write(aux)
@@ -70,7 +70,7 @@ func New(w *Witnesses, p *PublicInputs, aux []byte) *Proof {
 	mz := utils.MulScalars(&m, &z)
 	s1 := utils.AddScalars(u1, mz)
 
-	o := utils.MulScalars(w.Opening.O, &z)
+	o := utils.MulScalars(w.Opening.Scalar, &z)
 	s2 := utils.AddScalars(u2, o)
 
 	tz := utils.MulScalars(randSig.BldValue, &z)
@@ -89,7 +89,7 @@ func New(w *Witnesses, p *PublicInputs, aux []byte) *Proof {
 func Verify(pi *Proof, pubInput *PublicInputs, aux []byte) bool {
 	var buff bytes.Buffer
 
-	buff.WriteString(pubInput.Com.C.String())
+	buff.WriteString(pubInput.Com.Element.String())
 	buff.WriteString(pi.a1.String())
 	buff.WriteString(pi.a2.String())
 	buff.Write(aux)
@@ -104,7 +104,7 @@ func Verify(pi *Proof, pubInput *PublicInputs, aux []byte) bool {
 
 	lhs1 := utils.AddG1Points(g, h) // lhs1 = g^r1 * h^r2 = g^(u1+m*z) * h^(u2+o*z)
 
-	c := utils.GenerateG1Point(&z, pubInput.Com.C)
+	c := utils.GenerateG1Point(&z, pubInput.Com.Element)
 
 	rhs1 := utils.AddG1Points(c, pi.a1) // rhs1 = com^z * a1 = g^(m*z+u1) * h^(o*z+u2)
 

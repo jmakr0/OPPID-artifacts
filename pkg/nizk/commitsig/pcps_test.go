@@ -40,7 +40,7 @@ func TestRandomizePSSignature(t *testing.T) {
 
 func TestNewVerify(t *testing.T) {
 	ps := PS.KeyGen(DSTStr)
-	pc := PC.New(DSTStr)
+	pc := PC.Setup(DSTStr)
 
 	msg := []byte("Test")
 
@@ -92,7 +92,7 @@ func TestNewVerify(t *testing.T) {
 
 func TestVerify_InvalidProof(t *testing.T) {
 	ps := PS.KeyGen(DSTStr)
-	pc := PC.New(DSTStr)
+	pc := PC.Setup(DSTStr)
 
 	msg := []byte("Test")
 

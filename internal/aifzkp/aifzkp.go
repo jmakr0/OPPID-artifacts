@@ -17,7 +17,7 @@ const DSTStr = "abc"
 type AIF struct {
 	rsa *rsa256.RSA256
 	ps  *PS.PublicParams
-	pc  *PC.PC
+	pc  *PC.PublicParams
 	dst []byte
 }
 
@@ -42,7 +42,7 @@ type Auth struct {
 func New() *AIF {
 	rsa := rsa256.KeyGen(2048)
 	ps := PS.KeyGen(DSTStr + "_COM_SIG")
-	pc := PC.New(DSTStr + "_COM_SIG")
+	pc := PC.Setup(DSTStr + "_COM_SIG")
 
 	return &AIF{rsa: rsa, ps: ps, pc: pc, dst: []byte(DSTStr)}
 }

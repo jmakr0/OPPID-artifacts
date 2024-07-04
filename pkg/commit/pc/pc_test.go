@@ -7,7 +7,7 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	pc := New("")
+	pc := Setup(nil)
 	if !pc.G.IsOnG1() {
 		t.Fatalf("G should be on G1")
 	}
@@ -17,44 +17,44 @@ func TestNew(t *testing.T) {
 }
 
 func TestCommitValidMessage(t *testing.T) {
-	pc := New("")
+	pc := Setup(nil)
 	msg := []byte("test message")
 
 	commitment, opening := pc.Commit(msg)
-	if !commitment.C.IsOnG1() {
+	if !commitment.Element.IsOnG1() {
 		t.Fatalf("Commitment should be on G1")
 	}
-	if opening.O.IsZero() == 1 {
+	if opening.Scalar.IsZero() == 1 {
 		t.Fatalf("Opening should be valid")
 	}
 }
 
 func TestOpenWithCorrectParameters(t *testing.T) {
-	pc := New("")
+	pc := Setup(nil)
 	msg := []byte("test message")
 
 	commitment, opening := pc.Commit(msg)
-	isValid := pc.Open(msg, commitment, opening)
+	isValid := pc.Open(msg, &commitment, &opening)
 	if !isValid {
 		t.Fatalf("Open should validate the correct commitment")
 	}
 }
 
 func TestOpenWithIncorrectMessage(t *testing.T) {
-	pc := New("")
+	pc := Setup(nil)
 	msg := []byte("test message")
 
 	commitment, opening := pc.Commit(msg)
 
 	invalidMsg := []byte("wrong message")
-	isValid := pc.Open(invalidMsg, commitment, opening)
+	isValid := pc.Open(invalidMsg, &commitment, &opening)
 	if isValid {
 		t.Fatalf("Open should not validate the incorrect commitment")
 	}
 }
 
 func TestOpenWithIncorrectRandomness(t *testing.T) {
-	pc := New("Test_DST")
+	pc := Setup([]byte("Test DST"))
 
 	msg := []byte("test message")
 	commitment, _ := pc.Commit(msg)
@@ -62,12 +62,12 @@ func TestOpenWithIncorrectRandomness(t *testing.T) {
 	r := utils.GenerateRandomScalar()
 
 	invalidRandomOpening := new(Opening)
-	invalidRandomOpening.O = r
+	invalidRandomOpening.Scalar = r
 
-	invalidZeroOpening := &Opening{O: new(GG.Scalar)}
+	invalidZeroOpening := &Opening{Scalar: new(GG.Scalar)}
 
-	isValid1 := pc.Open(msg, commitment, invalidRandomOpening)
-	isValid2 := pc.Open(msg, commitment, invalidZeroOpening)
+	isValid1 := pc.Open(msg, &commitment, invalidRandomOpening)
+	isValid2 := pc.Open(msg, &commitment, invalidZeroOpening)
 	if isValid1 || isValid2 {
 		t.Fatalf("Open should not validate the incorrect commitment with wrong randomness")
 	}

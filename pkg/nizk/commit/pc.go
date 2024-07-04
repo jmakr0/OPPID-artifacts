@@ -18,7 +18,7 @@ type Witness struct {
 }
 
 type PublicInput struct {
-	params *PC.PC
+	params *PC.PublicParams
 	com    *PC.Commitment
 }
 
@@ -42,19 +42,19 @@ func New(p *PublicInput, w *Witness) *Proof {
 	var buff bytes.Buffer
 
 	buff.Write(a1.Bytes())
-	buff.Write(p.com.C.Bytes())
+	buff.Write(p.com.Element.Bytes())
 
 	data := buff.Bytes()
 
 	z := utils.HashToScalar(data, []byte(DST))
 
 	// Responses
-	m := utils.HashToScalar(w.msg, []byte(PC.DSTStr))
+	m := utils.HashToScalar(w.msg, []byte(PC.dstStr))
 
 	mz := utils.MulScalars(&m, &z)
 	s1 := utils.AddScalars(u1, mz)
 
-	oz := utils.MulScalars(w.opening.O, &z)
+	oz := utils.MulScalars(w.opening.Scalar, &z)
 	s2 := utils.AddScalars(u2, oz)
 
 	return &Proof{
@@ -66,7 +66,7 @@ func Verify(p *PublicInput, pi *Proof) bool {
 	var buf bytes.Buffer
 
 	buf.Write(pi.a1.Bytes())
-	buf.Write(p.com.C.Bytes())
+	buf.Write(p.com.Element.Bytes())
 
 	data := buf.Bytes()
 
@@ -77,7 +77,7 @@ func Verify(p *PublicInput, pi *Proof) bool {
 
 	lhs := utils.AddG1Points(g, h)
 
-	c := utils.GenerateG1Point(&z, p.com.C)
+	c := utils.GenerateG1Point(&z, p.com.Element)
 
 	rhs := utils.AddG1Points(pi.a1, c)
 
