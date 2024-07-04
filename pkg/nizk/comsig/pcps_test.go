@@ -48,7 +48,7 @@ func TestNewVerify(t *testing.T) {
 	com, opening := pc.Commit(msg)
 
 	w := &Witnesses{Msg: msg, Sig: sig, Opening: opening}
-	p := &PublicInputs{PSParams: ps, PCParams: pc, Com: com}
+	p := &PublicInputs{ps: ps, ps: pc, Com: com}
 
 	// Call KeyGen to generate the proof
 	aux := []byte("auxiliary data")
@@ -100,7 +100,7 @@ func TestVerify_InvalidProof(t *testing.T) {
 	com, opening := pc.Commit(msg)
 
 	w := &Witnesses{Msg: msg, Sig: sig, Opening: opening}
-	p := &PublicInputs{PSParams: ps, PCParams: pc, Com: com}
+	p := &PublicInputs{ps: ps, ps: pc, Com: com}
 
 	// Call KeyGen to generate the proof
 	aux := []byte("auxiliary data")

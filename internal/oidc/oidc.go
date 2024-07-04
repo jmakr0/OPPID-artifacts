@@ -9,8 +9,7 @@ import (
 )
 
 type PublicParams struct {
-	keySize int
-	rsa     *rsa256.PublicParams
+	rsa *rsa256.PublicParams
 }
 
 type PublicKey struct {
@@ -30,13 +29,12 @@ type Token struct {
 }
 
 func Setup() *PublicParams {
-	return &PublicParams{keySize: 2048}
+	rsaKeySize := 2048
+	return &PublicParams{rsa256.Setup(rsaKeySize)}
 }
 
 func (pp *PublicParams) KeyGen() (*PrivateKey, *PublicKey) {
-	rsa := rsa256.Setup(2048)
-	sk, pk := rsa.KeyGen()
-	pp.rsa = rsa
+	sk, pk := pp.rsa.KeyGen()
 
 	var salt [32]byte
 	_, err := rand.Read(salt[:])

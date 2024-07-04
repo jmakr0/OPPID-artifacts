@@ -11,7 +11,7 @@ func TestNewVerify(t *testing.T) {
 
 	sig := ps.Sign(msg)
 
-	p := &PublicInput{PSParams: ps}
+	p := &PublicInput{psPk: ps}
 	w := &Witness{msg: msg, sig: sig}
 
 	pi := New(p, w)

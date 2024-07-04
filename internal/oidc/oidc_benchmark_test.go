@@ -8,7 +8,7 @@ import (
 
 func BenchmarkOIDCResponse(b *testing.B) {
 	oidc := Setup()
-	sk, _ := oidc.KeyGen()
+	isk, _ := oidc.KeyGen()
 
 	rid := []byte("Test-RP")
 	uid := []byte("alice.doe@idp.com")
@@ -23,16 +23,15 @@ func BenchmarkOIDCResponse(b *testing.B) {
 	start := time.Now()
 
 	for i := 0; i < b.N; i++ {
-		oidc.Response(sk, rid, uid, ctx[:], sid[:])
+		oidc.Response(isk, rid, uid, ctx[:], sid[:])
 	}
-
 	elapsed := time.Since(start)
 	b.ReportMetric(float64(elapsed.Milliseconds())/float64(b.N), "ms/op")
 }
 
 func BenchmarkOIDCVerify(b *testing.B) {
 	oidc := Setup()
-	sk, pk := oidc.KeyGen()
+	isk, ipk := oidc.KeyGen()
 
 	rid := []byte("Test-RP")
 	uid := []byte("alice.doe@idp.com")
@@ -43,17 +42,16 @@ func BenchmarkOIDCVerify(b *testing.B) {
 	var sid [8]byte
 	_, _ = rand.Read(sid[:])
 
-	tk := oidc.Response(sk, rid, uid, ctx[:], sid[:])
+	tk := oidc.Response(isk, rid, uid, ctx[:], sid[:])
 
 	b.ResetTimer()
 	start := time.Now()
 	for i := 0; i < b.N; i++ {
-		isValid := oidc.Verify(pk, rid, tk.ppid, ctx[:], sid[:], tk)
+		isValid := oidc.Verify(ipk, rid, tk.ppid, ctx[:], sid[:], tk)
 		if !isValid {
 			b.Fatalf("Failed to verify response")
 		}
 	}
-
 	elapsed := time.Since(start)
 	b.ReportMetric(float64(elapsed.Milliseconds())/float64(b.N), "ms/op")
 }

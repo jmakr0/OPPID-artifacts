@@ -29,7 +29,7 @@ func BenchmarkPCOpen(b *testing.B) {
 	// Run the benchmark
 	start := time.Now()
 	for i := 0; i < b.N; i++ {
-		isValid := pc.Open(msg, &c, &o)
+		isValid := pc.Open(msg, c, o)
 		if !isValid {
 			b.Fatal("open failed")
 		}

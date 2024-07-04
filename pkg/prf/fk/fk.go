@@ -13,7 +13,7 @@ type FK struct {
 }
 
 func New() *FK {
-	prfHmac := PRF.New()
+	prfHmac := PRF.KeyGen()
 	prfDL := DL_PRF.New("")
 	return &FK{HmacPRF: prfHmac, DlPRF: prfDL}
 }

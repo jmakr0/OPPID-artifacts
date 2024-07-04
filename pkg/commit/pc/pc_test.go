@@ -34,7 +34,7 @@ func TestOpenWithCorrectParameters(t *testing.T) {
 	msg := []byte("test message")
 
 	commitment, opening := pc.Commit(msg)
-	isValid := pc.Open(msg, &commitment, &opening)
+	isValid := pc.Open(msg, commitment, opening)
 	if !isValid {
 		t.Fatalf("Open should validate the correct commitment")
 	}
@@ -47,7 +47,7 @@ func TestOpenWithIncorrectMessage(t *testing.T) {
 	commitment, opening := pc.Commit(msg)
 
 	invalidMsg := []byte("wrong message")
-	isValid := pc.Open(invalidMsg, &commitment, &opening)
+	isValid := pc.Open(invalidMsg, commitment, opening)
 	if isValid {
 		t.Fatalf("Open should not validate the incorrect commitment")
 	}
@@ -66,8 +66,8 @@ func TestOpenWithIncorrectRandomness(t *testing.T) {
 
 	invalidZeroOpening := &Opening{Scalar: new(GG.Scalar)}
 
-	isValid1 := pc.Open(msg, &commitment, invalidRandomOpening)
-	isValid2 := pc.Open(msg, &commitment, invalidZeroOpening)
+	isValid1 := pc.Open(msg, commitment, *invalidRandomOpening)
+	isValid2 := pc.Open(msg, commitment, *invalidZeroOpening)
 	if isValid1 || isValid2 {
 		t.Fatalf("Open should not validate the incorrect commitment with wrong randomness")
 	}

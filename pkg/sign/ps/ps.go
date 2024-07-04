@@ -9,7 +9,7 @@ import (
 const dstStr = "OPPID_BLS12384_XMD:SHA-256_PS_"
 
 type PublicParams struct {
-	dst []byte
+	Dst []byte
 }
 
 type PublicKey struct {
@@ -30,7 +30,7 @@ type Signature struct {
 
 func Setup(dst []byte) *PublicParams {
 	if dst == nil {
-		return &PublicParams{dst: []byte(dstStr)}
+		return &PublicParams{Dst: []byte(dstStr)}
 	}
 	return &PublicParams{dst}
 }
@@ -53,7 +53,7 @@ func (pp *PublicParams) Sign(k *PrivateKey, msg []byte) Signature {
 	u := utils.GenerateRandomScalar()
 	sig.One = utils.GenerateG1Point(u, GG.G1Generator())
 
-	m := utils.HashToScalar(msg, pp.dst)
+	m := utils.HashToScalar(msg, pp.Dst)
 	ym := utils.MulScalars(k.y, &m)
 	exp := utils.AddScalars(k.x, ym) // x+y*m
 
@@ -68,7 +68,7 @@ func (pp *PublicParams) Verify(pk *PublicKey, msg []byte, sig Signature) bool {
 		log.Fatalf("Error verifying PS signature: sigma one not on G1 curve or is identity")
 	}
 
-	m := utils.HashToScalar(msg, pp.dst)
+	m := utils.HashToScalar(msg, pp.Dst)
 	Ym := utils.GenerateG2Point(&m, pk.Y)
 	XYm := utils.AddG2Points(pk.X, Ym)
 

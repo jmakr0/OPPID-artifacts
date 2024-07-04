@@ -14,14 +14,14 @@ const DSTStr = "OPPID_BLS12384_XMD:SHA-256_NIZK_PC_PS"
 
 type Witnesses struct {
 	Msg     []byte
-	Sig     *ps.Signature
-	Opening *PC.Opening
+	Sig     ps.Signature
+	Opening PC.Opening
 }
 
 type PublicInputs struct {
-	PSParams *ps.PublicParams
-	PCParams *PC.PublicParams
-	Com      *PC.Commitment
+	PS  *ps.PublicParams
+	PC  *PC.PublicParams
+	Com PC.Commitment
 }
 
 type Proof struct {
@@ -33,22 +33,22 @@ type Proof struct {
 	r3  *GG.Scalar
 }
 
-func New(w *Witnesses, p *PublicInputs, aux []byte) *Proof {
+func New(w Witnesses, p PublicInputs, aux []byte) Proof {
 	u1 := utils.GenerateRandomScalar() // for commitment
 	u2 := utils.GenerateRandomScalar() // for commitment
 	u3 := utils.GenerateRandomScalar() // for signature
 	randSig := NIZK_PS.Randomize(w.Sig)
 
 	// commitment announcement
-	g := utils.GenerateG1Point(u1, p.PCParams.G)
-	h := utils.GenerateG1Point(u2, p.PCParams.H)
+	g := utils.GenerateG1Point(u1, p.ps.G)
+	h := utils.GenerateG1Point(u2, p.ps.H)
 	a1 := utils.AddG1Points(g, h) // a1 = g^u1 * h^u2
 
 	// signature announcement
 
 	// Moved to G2 before calculating pairing
-	rSig2 := utils.GenerateG2Point(u1, p.PSParams.Y)
-	tSig2 := utils.GenerateG2Point(u3, p.PSParams.G)
+	rSig2 := utils.GenerateG2Point(u1, p.ps.Y)
+	tSig2 := utils.GenerateG2Point(u3, p.ps.G)
 	sig2 := utils.AddG2Points(rSig2, tSig2)
 
 	a2 := GG.Pair(randSig.Sig.One, sig2)
@@ -65,7 +65,7 @@ func New(w *Witnesses, p *PublicInputs, aux []byte) *Proof {
 	z := utils.HashToScalar(data, []byte(DSTStr)) // challenge is hash of data
 
 	// Responses
-	m := utils.HashToScalar(w.Msg, p.PCParams.DST)
+	m := utils.HashToScalar(w.Msg, p.ps.DST)
 
 	mz := utils.MulScalars(&m, &z)
 	s1 := utils.AddScalars(u1, mz)
@@ -99,8 +99,8 @@ func Verify(pi *Proof, pubInput *PublicInputs, aux []byte) bool {
 	z := utils.HashToScalar(data, []byte(DSTStr))
 
 	// Verify commitment
-	g := utils.GenerateG1Point(pi.r1, pubInput.PCParams.G)
-	h := utils.GenerateG1Point(pi.r2, pubInput.PCParams.H)
+	g := utils.GenerateG1Point(pi.r1, pubInput.ps.G)
+	h := utils.GenerateG1Point(pi.r2, pubInput.ps.H)
 
 	lhs1 := utils.AddG1Points(g, h) // lhs1 = g^r1 * h^r2 = g^(u1+m*z) * h^(u2+o*z)
 
@@ -118,8 +118,8 @@ func Verify(pi *Proof, pubInput *PublicInputs, aux []byte) bool {
 
 	sig2z := utils.GenerateG1Point(&z, pi.sig.Two)
 
-	lhsP1 := GG.Pair(sig1z, pubInput.PSParams.X)
-	lhsP2 := GG.Pair(sig2z, pubInput.PSParams.G)
+	lhsP1 := GG.Pair(sig1z, pubInput.ps.X)
+	lhsP2 := GG.Pair(sig2z, pubInput.ps.G)
 
 	inv := new(GG.Gt)
 	inv.Inv(lhsP1)
@@ -130,8 +130,8 @@ func Verify(pi *Proof, pubInput *PublicInputs, aux []byte) bool {
 	lhsP4 := new(GG.Gt)
 	lhsP4.Mul(lhsP3, pi.a2)
 
-	gt := utils.GenerateG2Point(pi.r3, pubInput.PSParams.G)
-	ym := utils.GenerateG2Point(pi.r1, pubInput.PSParams.Y)
+	gt := utils.GenerateG2Point(pi.r3, pubInput.ps.G)
+	ym := utils.GenerateG2Point(pi.r1, pubInput.ps.Y)
 
 	rhsG2 := utils.AddG2Points(ym, gt)
 

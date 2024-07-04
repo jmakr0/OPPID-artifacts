@@ -46,7 +46,7 @@ func (p *PublicParams) Commit(msg []byte) (Commitment, Opening) {
 	return c, o
 }
 
-func (p *PublicParams) Open(msg []byte, c *Commitment, o *Opening) bool {
+func (p *PublicParams) Open(msg []byte, c Commitment, o Opening) bool {
 	m := utils.HashToScalar(msg, p.DST)
 	g := utils.GenerateG1Point(&m, p.G)
 	h := utils.GenerateG1Point(o.Scalar, p.H)

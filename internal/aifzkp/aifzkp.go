@@ -7,89 +7,92 @@ import (
 	NIZK "OPPID/pkg/nizk/comsig"
 	PS "OPPID/pkg/sign/ps"
 	"OPPID/pkg/sign/rsa256"
-	"OPPID/pkg/utils"
-	GG "github.com/cloudflare/circl/ecc/bls12381"
 	"log"
 )
 
-const DSTStr = "abc"
+const dstStr = "OPPID_BLS12384_XMD:SHA-256_AIF-ZKP_"
 
-type AIF struct {
-	rsa *rsa256.RSA256
-	ps  *PS.PublicParams
+type PublicParams struct {
+	rsa *rsa256.PublicParams
 	pc  *PC.PublicParams
-	dst []byte
+	ps  *PS.PublicParams
+}
+
+type PublicKey struct {
+	rsaPk *rsa256.PublicKey
+	psPk  *PS.PublicKey
+}
+
+type PrivateKey struct {
+	rsaSk *rsa256.PrivateKey
+	psSk  *PS.PrivateKey
 }
 
 type Credential struct {
-	value *PS.Signature
+	sig PS.Signature
 }
 
 type UsrCommitment struct {
-	com    *PC.Commitment
-	bldRid *GG.G1
+	com PC.Commitment
 }
 
 type UsrOpening struct {
-	opening *PC.Opening
-	bld     *GG.Scalar
+	opening PC.Opening
 }
 
 type Auth struct {
-	proof *NIZK.Proof
+	proof NIZK.Proof
 }
 
-func New() *AIF {
-	rsa := rsa256.KeyGen(2048)
-	ps := PS.KeyGen(DSTStr + "_COM_SIG")
-	pc := PC.Setup(DSTStr + "_COM_SIG")
-
-	return &AIF{rsa: rsa, ps: ps, pc: pc, dst: []byte(DSTStr)}
+func Setup() *PublicParams {
+	rsa := rsa256.Setup(2048)
+	// Note that commitments and signatures must to the same domain (dst) for the (NIZK) proof
+	pc := PC.Setup([]byte(dstStr))
+	ps := PS.Setup([]byte(dstStr))
+	return &PublicParams{rsa, pc, ps}
 }
 
-// Reg issues PublicParams signature as creadential; does not keep member state for simplicity
-func (pp *AIF) Reg(rid []byte) *Credential {
-	return &Credential{value: pp.ps.Sign(rid)}
+func (pp *PublicParams) KeyGen() (*PrivateKey, *PublicKey) {
+	rsaSk, rsaPk := pp.rsa.KeyGen()
+	psSk, psPk := pp.ps.KeyGen()
+	return &PrivateKey{rsaSk, psSk}, &PublicKey{rsaPk, psPk}
 }
 
-func (pp *AIF) Init(rid []byte) (*UsrCommitment, *UsrOpening) {
+func (pp *PublicParams) Register(k *PrivateKey, rid []byte) Credential {
+	//var cred Credential
+	//cred.sig = pp.ps.Sign(k, rid)
+	return Credential{sig: pp.ps.Sign(k.psSk, rid)}
+}
+
+func (pp *PublicParams) Init(rid []byte) (*UsrCommitment, *UsrOpening) {
 	com, opn := pp.pc.Commit(rid)
-
-	g := new(GG.G1)
-	g.Hash(rid, pp.dst)
-
-	r := utils.GenerateRandomScalar()
-	bldRid := utils.GenerateG1Point(r, g)
-
-	return &UsrCommitment{com, bldRid}, &UsrOpening{opn, r}
+	return &UsrCommitment{com}, &UsrOpening{opn}
 }
 
-func (pp *AIF) Request(rid []byte, cred *Credential, crid *UsrCommitment, orid *UsrOpening, sid []byte) *Auth {
-	g := new(GG.G1)
-	g.Hash(rid, pp.dst)
-
-	bldRid := utils.GenerateG1Point(orid.bld, g)
-	if !bldRid.IsEqual(crid.bldRid) || !pp.pc.Open(rid, crid.com, orid.opening) {
-		log.Fatalf("Commitment or blinding do not verify")
+func (pp *PublicParams) Request(c *Credential, rid []byte, crid UsrCommitment, orid UsrOpening, sid []byte) Auth {
+	if !pp.pc.Open(rid, crid.com, orid.opening) {
+		log.Fatalf("Commitment is not correct")
 	}
 
-	w := &NIZK.Witnesses{
-		Msg:     rid,
-		Sig:     cred.value,
-		Opening: orid.opening,
-	}
-	pub := &NIZK.PublicInputs{
-		PSParams: pp.ps,
-		PCParams: pp.pc,
-		Com:      crid.com,
-	}
-	pi := NIZK.New(w, pub, sid)
+	var w NIZK.Witnesses
+	w.Msg = rid
+	w.Sig = c.sig
+	w.Opening = orid.opening
 
-	return &Auth{pi}
+	var p NIZK.PublicInputs
+	p.PC = pp.pc
+	p.PS = pp.ps
+	p.Com = crid.com
+
+	pi := NIZK.New(w, p, sid)
+
+	return Auth{pi}
 }
 
-func (pp *AIF) Response() {}
-func (pp *AIF) Finalize() {}
-func (pp *AIF) Verify() bool {
+func (pp *PublicParams) Response() {}
+
+func (pp *PublicParams) Finalize() {}
+
+func (pp *PublicParams) Verify() bool {
 	return true
 }

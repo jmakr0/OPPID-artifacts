@@ -11,7 +11,8 @@ import (
 const DSTStr = "OPPID_BLS12384_XMD:SHA-256_NIZK_PS"
 
 type PublicInput struct {
-	PSParams *PS.PublicParams
+	psPp *PS.PublicParams
+	psPk *PS.PublicKey
 }
 
 type Witness struct {
@@ -31,7 +32,7 @@ type RandomizedSignature struct {
 	Sig      *PS.Signature
 }
 
-// Corresponds to 6.2: Proving Knowledge of a Signature
+// Randomize corresponds to 6.2: Proving Knowledge of a Signature
 func Randomize(psSig *PS.Signature) *RandomizedSignature {
 	r := utils.GenerateRandomScalar()
 	t := utils.GenerateRandomScalar()
@@ -52,8 +53,8 @@ func New(p *PublicInput, w *Witness) *Proof {
 	randSig := Randomize(w.sig)
 
 	// Announcements
-	y := utils.GenerateG2Point(u1, p.PSParams.Y)
-	g := utils.GenerateG2Point(u2, p.PSParams.G)
+	y := utils.GenerateG2Point(u1, p.psPk.Y)
+	g := utils.GenerateG2Point(u2, p.psPk.G)
 	yg := utils.AddG2Points(y, g)
 
 	a1 := GG.Pair(randSig.Sig.One, yg)
@@ -70,7 +71,7 @@ func New(p *PublicInput, w *Witness) *Proof {
 	z := utils.HashToScalar(data, []byte(DSTStr))
 
 	// Responses
-	m := utils.HashToScalar(w.msg, p.PSParams.DST)
+	m := utils.HashToScalar(w.msg, p.psPp.Dst)
 
 	mz := utils.MulScalars(&m, &z)
 	s1 := utils.AddScalars(u1, mz)
@@ -99,11 +100,11 @@ func Verify(p *PublicInput, pi *Proof) bool {
 
 	z1 := utils.GenerateG1Point(&z, pi.randSig.Two)
 
-	p1 := GG.Pair(z1, p.PSParams.G)
+	p1 := GG.Pair(z1, p.psPk.G)
 
 	z2 := utils.GenerateG1Point(&z, pi.randSig.One)
 
-	p2 := GG.Pair(z2, p.PSParams.X)
+	p2 := GG.Pair(z2, p.psPk.X)
 
 	p2Inv := new(GG.Gt)
 	p2Inv.Inv(p2)
@@ -114,8 +115,8 @@ func Verify(p *PublicInput, pi *Proof) bool {
 	lhs := new(GG.Gt)
 	lhs.Mul(h1, pi.a1)
 
-	y := utils.GenerateG2Point(pi.s1, p.PSParams.Y)
-	g := utils.GenerateG2Point(pi.s2, p.PSParams.G)
+	y := utils.GenerateG2Point(pi.s1, p.psPk.Y)
+	g := utils.GenerateG2Point(pi.s2, p.psPk.G)
 	yg := utils.AddG2Points(y, g)
 
 	rhs := GG.Pair(pi.randSig.One, yg)
