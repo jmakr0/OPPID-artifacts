@@ -7,21 +7,23 @@ import (
 )
 
 func BenchmarkOIDCResponse(b *testing.B) {
-	oidc := New(2048)
+	oidc := Setup()
+	sk, _ := oidc.KeyGen()
 
 	rid := []byte("Test-RP")
 	uid := []byte("alice.doe@idp.com")
-	var ctx [16]byte
-	var sid [8]byte
 
+	var ctx [16]byte
 	_, _ = rand.Read(ctx[:])
+
+	var sid [8]byte
 	_, _ = rand.Read(sid[:])
 
 	b.ResetTimer()
 	start := time.Now()
 
 	for i := 0; i < b.N; i++ {
-		oidc.Response(rid, uid, ctx[:], sid[:])
+		oidc.Response(sk, rid, uid, ctx[:], sid[:])
 	}
 
 	elapsed := time.Since(start)
@@ -29,23 +31,24 @@ func BenchmarkOIDCResponse(b *testing.B) {
 }
 
 func BenchmarkOIDCVerify(b *testing.B) {
-	oidc := New(2048)
+	oidc := Setup()
+	sk, pk := oidc.KeyGen()
 
 	rid := []byte("Test-RP")
 	uid := []byte("alice.doe@idp.com")
-	var ctx [16]byte
-	var sid [8]byte
 
+	var ctx [16]byte
 	_, _ = rand.Read(ctx[:])
+
+	var sid [8]byte
 	_, _ = rand.Read(sid[:])
 
-	tk := oidc.Response(rid, uid, ctx[:], sid[:])
+	tk := oidc.Response(sk, rid, uid, ctx[:], sid[:])
 
 	b.ResetTimer()
 	start := time.Now()
-
 	for i := 0; i < b.N; i++ {
-		isValid := oidc.Verify(rid, tk.ppid, ctx[:], sid[:], tk.Sigma)
+		isValid := oidc.Verify(pk, rid, tk.ppid, ctx[:], sid[:], tk)
 		if !isValid {
 			b.Fatalf("Failed to verify response")
 		}

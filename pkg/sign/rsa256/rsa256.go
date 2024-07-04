@@ -15,11 +15,6 @@ type PrivateKey struct{ key *rsa.PrivateKey }
 
 type Signature = []byte
 
-type RSA256 struct {
-	PrivateKey *rsa.PrivateKey
-	PublicKey  *rsa.PublicKey
-}
-
 func Setup(keySize int) *PublicParams {
 	return &PublicParams{keySize}
 }
