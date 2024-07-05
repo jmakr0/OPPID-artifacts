@@ -18,7 +18,7 @@ func New() *FK {
 	return &FK{HmacPRF: prfHmac, DlPRF: prfDL}
 }
 
-// todo: fix DST
+// todo: fix dst
 func (p *FK) Eval(msg1, msg2 []byte) *GG.G1 {
 	y := p.HmacPRF.Eval(msg2) // y = HmacPRF(msg2, msg2)
 	k := utils.HashToScalar(y, []byte("BLS12384_XMD:SHA-256_EVL_FK"))

@@ -3,29 +3,29 @@ package comsig
 import (
 	PC "OPPID/pkg/commit/pc"
 	NIZK_PS "OPPID/pkg/nizk/sig"
-	"OPPID/pkg/sign/ps"
+	PS "OPPID/pkg/sign/ps"
 	"OPPID/pkg/utils"
 	"bytes"
 	GG "github.com/cloudflare/circl/ecc/bls12381"
 	"log"
 )
 
-const DSTStr = "OPPID_BLS12384_XMD:SHA-256_NIZK_PC_PS"
+const dstStr = "OPPID_BLS12384_XMD:SHA-256_NIZK_PC_PS_"
 
 type Witnesses struct {
 	Msg     []byte
-	Sig     ps.Signature
-	Opening PC.Opening
+	Sig     *PS.Signature
+	Opening *PC.Opening
 }
 
 type PublicInputs struct {
-	PS  *ps.PublicParams
+	PS  *PS.PublicKey
 	PC  *PC.PublicParams
-	Com PC.Commitment
+	Com *PC.Commitment
 }
 
 type Proof struct {
-	sig *ps.Signature // randomized signature
+	sig *PS.Signature // randomized signature
 	a1  *GG.G1
 	a2  *GG.Gt
 	r1  *GG.Scalar
@@ -33,80 +33,73 @@ type Proof struct {
 	r3  *GG.Scalar
 }
 
-func New(w Witnesses, p PublicInputs, aux []byte) Proof {
-	u1 := utils.GenerateRandomScalar() // for commitment
-	u2 := utils.GenerateRandomScalar() // for commitment
-	u3 := utils.GenerateRandomScalar() // for signature
-	randSig := NIZK_PS.Randomize(w.Sig)
-
-	// commitment announcement
-	g := utils.GenerateG1Point(u1, p.ps.G)
-	h := utils.GenerateG1Point(u2, p.ps.H)
-	a1 := utils.AddG1Points(g, h) // a1 = g^u1 * h^u2
-
-	// signature announcement
-
-	// Moved to G2 before calculating pairing
-	rSig2 := utils.GenerateG2Point(u1, p.ps.Y)
-	tSig2 := utils.GenerateG2Point(u3, p.ps.G)
-	sig2 := utils.AddG2Points(rSig2, tSig2)
-
-	a2 := GG.Pair(randSig.Sig.One, sig2)
-
-	// Challenge
+func challenge(c *PC.Commitment, a1 *GG.G1, a2 *GG.Gt, aux []byte) GG.Scalar {
 	var buf bytes.Buffer
 
-	buf.WriteString(p.Com.Element.String())
-	buf.WriteString(a1.String())
-	buf.WriteString(a2.String())
+	buf.Write(c.Element.Bytes())
+	buf.Write(a1.Bytes())
+	a2Bytes, err := a2.MarshalBinary()
+	if err != nil {
+		log.Fatalf("Failed to marshal a2 announcement: %v", err)
+	}
+	buf.Write(a2Bytes)
 	buf.Write(aux)
 
 	data := buf.Bytes()
-	z := utils.HashToScalar(data, []byte(DSTStr)) // challenge is hash of data
-
-	// Responses
-	m := utils.HashToScalar(w.Msg, p.ps.DST)
-
-	mz := utils.MulScalars(&m, &z)
-	s1 := utils.AddScalars(u1, mz)
-
-	o := utils.MulScalars(w.Opening.Scalar, &z)
-	s2 := utils.AddScalars(u2, o)
-
-	tz := utils.MulScalars(randSig.BldValue, &z)
-	s3 := utils.AddScalars(u3, tz)
-
-	return &Proof{
-		sig: randSig.Sig,
-		a1:  a1,
-		a2:  a2,
-		r1:  s1,
-		r2:  s2,
-		r3:  s3,
-	}
+	return utils.HashToScalar(data, []byte(dstStr))
 }
 
-func Verify(pi *Proof, pubInput *PublicInputs, aux []byte) bool {
-	var buff bytes.Buffer
+func New(w Witnesses, p PublicInputs, aux []byte, dst []byte) Proof {
+	u1 := utils.GenerateRandomScalar() // for commitment
+	u2 := utils.GenerateRandomScalar() // for commitment
+	u3 := utils.GenerateRandomScalar() // for signature
 
-	buff.WriteString(pubInput.Com.Element.String())
-	buff.WriteString(pi.a1.String())
-	buff.WriteString(pi.a2.String())
-	buff.Write(aux)
+	t, randSig := NIZK_PS.Randomize(w.Sig)
 
-	data := buff.Bytes()
+	// Announcement commitment
+	g := utils.GenerateG1Point(u1, p.PC.G)
+	h := utils.GenerateG1Point(u2, p.PC.H)
 
-	z := utils.HashToScalar(data, []byte(DSTStr))
+	var pi Proof
+	pi.a1 = utils.AddG1Points(g, h) // a1 = g^u1 * h^u2
+
+	// Announcement signature
+
+	// Moved to G2 before calculating pairing
+	rSig2 := utils.GenerateG2Point(u1, p.PS.Y)
+	tSig2 := utils.GenerateG2Point(u3, p.PS.G)
+	sig2 := utils.AddG2Points(rSig2, tSig2)
+
+	pi.a2 = GG.Pair(randSig.One, sig2)
+
+	z := challenge(p.Com, pi.a1, pi.a2, aux)
+
+	// Responses
+	m := utils.HashToScalar(w.Msg, dst)
+	mz := utils.MulScalars(&m, &z)
+	pi.r1 = utils.AddScalars(u1, mz)
+
+	o := utils.MulScalars(w.Opening.Scalar, &z)
+	pi.r2 = utils.AddScalars(u2, o)
+
+	tz := utils.MulScalars(t, &z)
+	pi.r3 = utils.AddScalars(u3, tz)
+
+	return pi
+}
+
+func Verify(pi Proof, p PublicInputs, aux []byte) bool {
+	z := challenge(p.Com, pi.a1, pi.a2, aux)
 
 	// Verify commitment
-	g := utils.GenerateG1Point(pi.r1, pubInput.ps.G)
-	h := utils.GenerateG1Point(pi.r2, pubInput.ps.H)
+	g := utils.GenerateG1Point(pi.r1, p.PC.G)
+	h := utils.GenerateG1Point(pi.r2, p.PC.H)
 
 	lhs1 := utils.AddG1Points(g, h) // lhs1 = g^r1 * h^r2 = g^(u1+m*z) * h^(u2+o*z)
 
-	c := utils.GenerateG1Point(&z, pubInput.Com.Element)
+	c := utils.GenerateG1Point(&z, p.Com.Element)
 
-	rhs1 := utils.AddG1Points(c, pi.a1) // rhs1 = com^z * a1 = g^(m*z+u1) * h^(o*z+u2)
+	rhs1 := utils.AddG1Points(c, pi.a1) // rhs1 = Com^z * a1 = g^(m*z+u1) * h^(o*z+u2)
 
 	validCommitment := lhs1.IsEqual(rhs1)
 	if !validCommitment {
@@ -115,11 +108,10 @@ func Verify(pi *Proof, pubInput *PublicInputs, aux []byte) bool {
 
 	// Verify signature
 	sig1z := utils.GenerateG1Point(&z, pi.sig.One)
-
 	sig2z := utils.GenerateG1Point(&z, pi.sig.Two)
 
-	lhsP1 := GG.Pair(sig1z, pubInput.ps.X)
-	lhsP2 := GG.Pair(sig2z, pubInput.ps.G)
+	lhsP1 := GG.Pair(sig1z, p.PS.X)
+	lhsP2 := GG.Pair(sig2z, p.PS.G)
 
 	inv := new(GG.Gt)
 	inv.Inv(lhsP1)
@@ -130,8 +122,8 @@ func Verify(pi *Proof, pubInput *PublicInputs, aux []byte) bool {
 	lhsP4 := new(GG.Gt)
 	lhsP4.Mul(lhsP3, pi.a2)
 
-	gt := utils.GenerateG2Point(pi.r3, pubInput.ps.G)
-	ym := utils.GenerateG2Point(pi.r1, pubInput.ps.Y)
+	gt := utils.GenerateG2Point(pi.r3, p.PS.G)
+	ym := utils.GenerateG2Point(pi.r1, p.PS.Y)
 
 	rhsG2 := utils.AddG2Points(ym, gt)
 

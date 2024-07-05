@@ -92,7 +92,7 @@ func TestDifferentKeys(t *testing.T) {
 }
 
 func TestDifferentPublicParams(t *testing.T) {
-	ps1 := Setup([]byte("Different DST"))
+	ps1 := Setup([]byte("Different dst"))
 	ps2 := Setup(nil)
 	sk, pk := ps1.KeyGen()
 

@@ -54,7 +54,7 @@ func TestOpenWithIncorrectMessage(t *testing.T) {
 }
 
 func TestOpenWithIncorrectRandomness(t *testing.T) {
-	pc := Setup([]byte("Test DST"))
+	pc := Setup([]byte("Test dst"))
 
 	msg := []byte("test message")
 	commitment, _ := pc.Commit(msg)

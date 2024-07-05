@@ -13,9 +13,10 @@ import (
 const dstStr = "OPPID_BLS12384_XMD:SHA-256_AIF-ZKP_"
 
 type PublicParams struct {
-	rsa *rsa256.PublicParams
-	pc  *PC.PublicParams
-	ps  *PS.PublicParams
+	rsa       *rsa256.PublicParams
+	dstComSig []byte
+	pc        *PC.PublicParams
+	ps        *PS.PublicParams
 }
 
 type PublicKey struct {
@@ -46,10 +47,12 @@ type Auth struct {
 
 func Setup() *PublicParams {
 	rsa := rsa256.Setup(2048)
-	// Note that commitments and signatures must to the same domain (dst) for the (NIZK) proof
-	pc := PC.Setup([]byte(dstStr))
-	ps := PS.Setup([]byte(dstStr))
-	return &PublicParams{rsa, pc, ps}
+
+	dst := []byte(dstStr + "COM_SIG") // Commitments & signatures must hash to the same domain (dst) for the (NIZK) proof
+	pc := PC.Setup(dst)
+	ps := PS.Setup(dst)
+
+	return &PublicParams{rsa, dst, pc, ps}
 }
 
 func (pp *PublicParams) KeyGen() (*PrivateKey, *PublicKey) {
@@ -59,32 +62,32 @@ func (pp *PublicParams) KeyGen() (*PrivateKey, *PublicKey) {
 }
 
 func (pp *PublicParams) Register(k *PrivateKey, rid []byte) Credential {
-	//var cred Credential
-	//cred.sig = pp.ps.Sign(k, rid)
-	return Credential{sig: pp.ps.Sign(k.psSk, rid)}
+	var cred Credential
+	cred.sig = pp.ps.Sign(k.psSk, rid)
+	return cred
 }
 
-func (pp *PublicParams) Init(rid []byte) (*UsrCommitment, *UsrOpening) {
+func (pp *PublicParams) Init(rid []byte) (*UsrOpening, *UsrCommitment) {
 	com, opn := pp.pc.Commit(rid)
-	return &UsrCommitment{com}, &UsrOpening{opn}
+	return &UsrOpening{opn}, &UsrCommitment{com}
 }
 
-func (pp *PublicParams) Request(c *Credential, rid []byte, crid UsrCommitment, orid UsrOpening, sid []byte) Auth {
+func (pp *PublicParams) Request(ipk *PublicKey, rid []byte, c *Credential, crid UsrCommitment, orid UsrOpening, sid []byte) Auth {
 	if !pp.pc.Open(rid, crid.com, orid.opening) {
 		log.Fatalf("Commitment is not correct")
 	}
 
 	var w NIZK.Witnesses
 	w.Msg = rid
-	w.Sig = c.sig
-	w.Opening = orid.opening
+	w.Sig = &c.sig
+	w.Opening = &orid.opening
 
 	var p NIZK.PublicInputs
 	p.PC = pp.pc
-	p.PS = pp.ps
-	p.Com = crid.com
+	p.PS = ipk.psPk
+	p.Com = &crid.com
 
-	pi := NIZK.New(w, p, sid)
+	pi := NIZK.New(w, p, sid, pp.dstComSig)
 
 	return Auth{pi}
 }

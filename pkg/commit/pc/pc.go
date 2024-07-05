@@ -11,7 +11,7 @@ const dstStr = "OPPID_BLS12384_XMD:SHA-256_COM_PC_"
 type PublicParams struct {
 	G   *GG.G1
 	H   *GG.G1
-	DST []byte
+	dst []byte
 }
 
 type Commitment struct{ Element *GG.G1 }
@@ -29,7 +29,7 @@ func Setup(dst []byte) *PublicParams {
 }
 
 func (p *PublicParams) Commit(msg []byte) (Commitment, Opening) {
-	m := utils.HashToScalar(msg, p.DST)
+	m := utils.HashToScalar(msg, p.dst)
 	g := utils.GenerateG1Point(&m, p.G)
 
 	var o Opening
@@ -47,7 +47,7 @@ func (p *PublicParams) Commit(msg []byte) (Commitment, Opening) {
 }
 
 func (p *PublicParams) Open(msg []byte, c Commitment, o Opening) bool {
-	m := utils.HashToScalar(msg, p.DST)
+	m := utils.HashToScalar(msg, p.dst)
 	g := utils.GenerateG1Point(&m, p.G)
 	h := utils.GenerateG1Point(o.Scalar, p.H)
 	c1 := utils.AddG1Points(g, h)
