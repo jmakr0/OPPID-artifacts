@@ -56,11 +56,13 @@ func New(w Witnesses, p PublicInputs, aux []byte, dst []byte) Proof {
 
 	t, randSig := NIZK_PS.Randomize(w.Sig)
 
+	var pi Proof
+	pi.sig = randSig
+
 	// Announcement commitment
 	g := utils.GenerateG1Point(u1, p.PC.G)
 	h := utils.GenerateG1Point(u2, p.PC.H)
 
-	var pi Proof
 	pi.a1 = utils.AddG1Points(g, h) // a1 = g^u1 * h^u2
 
 	// Announcement signature

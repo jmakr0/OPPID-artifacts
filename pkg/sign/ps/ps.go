@@ -19,8 +19,9 @@ type PublicKey struct {
 }
 
 type PrivateKey struct {
-	x *GG.Scalar
-	y *GG.Scalar
+	x  *GG.Scalar
+	y  *GG.Scalar
+	Pk *PublicKey
 }
 
 type Signature struct {
@@ -44,7 +45,9 @@ func (pp *PublicParams) KeyGen() (*PrivateKey, *PublicKey) {
 	X := utils.GenerateG2Point(x, g)
 	Y := utils.GenerateG2Point(y, g)
 
-	return &PrivateKey{x, y}, &PublicKey{g, X, Y}
+	pk := &PublicKey{g, X, Y}
+
+	return &PrivateKey{x, y, pk}, pk
 }
 
 func (pp *PublicParams) Sign(k *PrivateKey, msg []byte) Signature {
