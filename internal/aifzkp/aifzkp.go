@@ -52,6 +52,20 @@ type Token struct {
 }
 
 type FinalizedToken struct {
+	com     PC.Commitment
+	opening PC.Opening
+	sig     RSA.Signature
+}
+
+func tokenBytes(com *PC.Commitment, uid, ctx, sid []byte) []byte {
+	var tkBuf bytes.Buffer
+
+	tkBuf.Write(com.Element.Bytes())
+	tkBuf.Write(uid)
+	tkBuf.Write(ctx)
+	tkBuf.Write(sid)
+
+	return tkBuf.Bytes()
 }
 
 func Setup() *PublicParams {
@@ -112,13 +126,7 @@ func (pp *PublicParams) Response(isk *PrivateKey, auth Auth, crid UsrCommitment,
 		return Token{}, errors.New("invalid authentication proof")
 	}
 
-	var tkBuf bytes.Buffer
-	tkBuf.Write(crid.com.Element.Bytes())
-	tkBuf.Write(uid)
-	tkBuf.Write(ctx)
-	tkBuf.Write(sid)
-
-	tkBytes := tkBuf.Bytes()
+	tkBytes := tokenBytes(&crid.com, uid, ctx, sid)
 
 	var tk Token
 	tk.sig = pp.rsa.Sign(isk.rsaSk, tkBytes)
@@ -126,8 +134,22 @@ func (pp *PublicParams) Response(isk *PrivateKey, auth Auth, crid UsrCommitment,
 	return tk, nil
 }
 
-func (pp *PublicParams) Finalize() {}
+func (pp *PublicParams) Finalize(ipk *PublicKey, rid, uid, ctx, sid []byte, crid UsrCommitment, orid UsrOpening, t Token) (FinalizedToken, error) {
+	tkBytes := tokenBytes(&crid.com, uid, ctx, sid)
+	isValidCom := pp.pc.Open(rid, crid.com, orid.opening)
+	isValidSig := pp.rsa.Verify(ipk.rsaPk, tkBytes, t.sig)
+	if !isValidCom || !isValidSig {
+		return FinalizedToken{}, errors.New("commitment or signature did not verify")
+	}
 
-func (pp *PublicParams) Verify() bool {
-	return true
+	return FinalizedToken{crid.com, orid.opening, t.sig}, nil
+}
+
+func (pp *PublicParams) Verify(ipk *PublicKey, rid, uid, ctx, sid []byte, ft FinalizedToken) bool {
+	tkBytes := tokenBytes(&ft.com, uid, ctx, sid)
+
+	isValidCom := pp.pc.Open(rid, ft.com, ft.opening)
+	isValidSig := pp.rsa.Verify(ipk.rsaPk, tkBytes, ft.sig)
+
+	return isValidCom && isValidSig
 }

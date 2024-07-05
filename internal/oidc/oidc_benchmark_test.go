@@ -21,7 +21,6 @@ func BenchmarkOIDCResponse(b *testing.B) {
 
 	b.ResetTimer()
 	start := time.Now()
-
 	for i := 0; i < b.N; i++ {
 		oidc.Response(isk, rid, uid, ctx[:], sid[:])
 	}
