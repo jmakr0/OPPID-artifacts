@@ -3,13 +3,13 @@ package fk
 import "testing"
 
 func TestFK_Eval(t *testing.T) {
-	fk := New()
+	fk := KeyGen()
 
 	msg := []byte("Inner test message")
 	k := []byte("Outer test message")
 
 	y := fk.Eval(msg, k)
 	if y.IsIdentity() || !y.IsOnG1() {
-		t.Fatalf("HmacPRF output is invalid")
+		t.Fatalf("hmacPRF output is invalid")
 	}
 }

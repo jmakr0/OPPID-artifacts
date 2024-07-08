@@ -7,20 +7,18 @@ import (
 	"log"
 )
 
-type SecretKey struct {
-	key []byte
-}
+type Key = []byte
 
-func KeyGen() *SecretKey {
+func KeyGen() *Key {
 	k := make([]byte, 32)
 	if _, err := rand.Read(k); err != nil {
-		log.Fatalf("Fatal error creating random HmacPRF key: %v", err)
+		log.Fatalf("Fatal error creating random hmacPRF key: %v", err)
 	}
-	return &SecretKey{k}
+	return &k
 }
 
-func Eval(k *SecretKey, msg []byte) []byte {
-	evl := hmac.New(sha256.New, k.key)
-	evl.Write(msg)
-	return evl.Sum(nil)
+func Eval(k *Key, msg []byte) []byte {
+	y := hmac.New(sha256.New, *k)
+	y.Write(msg)
+	return y.Sum(nil)
 }

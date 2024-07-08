@@ -2,26 +2,21 @@ package fk
 
 import (
 	DL_PRF "OPPID/pkg/prf/dl"
-	PRF "OPPID/pkg/prf/hmac256"
+	HMAC_PRF "OPPID/pkg/prf/hmac256"
 	"OPPID/pkg/utils"
 	GG "github.com/cloudflare/circl/ecc/bls12381"
 )
 
-type FK struct {
-	HmacPRF *PRF.PRF
-	DlPRF   *DL_PRF.DLPRF
+const dstStr = "OPPID_BLS12384_XMD:SHA-256_FK_"
+
+type Key = HMAC_PRF.Key
+
+func KeyGen() *Key {
+	return HMAC_PRF.KeyGen()
 }
 
-func New() *FK {
-	prfHmac := PRF.KeyGen()
-	prfDL := DL_PRF.New("")
-	return &FK{HmacPRF: prfHmac, DlPRF: prfDL}
-}
-
-// todo: fix dst
-func (p *FK) Eval(msg1, msg2 []byte) *GG.G1 {
-	y := p.HmacPRF.Eval(msg2) // y = HmacPRF(msg2, msg2)
-	k := utils.HashToScalar(y, []byte("BLS12384_XMD:SHA-256_EVL_FK"))
-	p.DlPRF.K = &k
-	return p.DlPRF.Eval(msg1)
+func Eval(k *Key, msg1, msg2 []byte) *GG.G1 {
+	y := HMAC_PRF.Eval(k, msg2)
+	key := utils.HashToScalar(y, []byte(dstStr))
+	return DL_PRF.Eval(&key, msg1)
 }
