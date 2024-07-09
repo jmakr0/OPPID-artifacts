@@ -31,12 +31,12 @@ func BenchmarkOIDCResponse(b *testing.B) {
 func BenchmarkOIDCVerify(b *testing.B) {
 	oidc, rid, uid, ctx, sid, isk, ipk := setupBenchmark()
 
-	tk := oidc.Response(isk, rid, uid, ctx[:], sid[:])
+	tk := oidc.Response(isk, rid, uid, ctx, sid)
 
 	b.ResetTimer()
 	start := time.Now()
 	for i := 0; i < b.N; i++ {
-		isValid := oidc.Verify(ipk, rid, tk.ppid, ctx[:], sid[:], tk)
+		isValid := oidc.Verify(ipk, rid, tk.ppid, ctx, sid, tk)
 		if !isValid {
 			b.Fatalf("failed to verify response")
 		}

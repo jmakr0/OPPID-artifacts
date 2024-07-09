@@ -48,7 +48,7 @@ func BenchmarkAIFZKPRequest(b *testing.B) {
 	b.ResetTimer()
 	start := time.Now()
 	for i := 0; i < b.N; i++ {
-		aifZkp.Request(ipk, rid, cred, crid, orid, sid[:])
+		aifZkp.Request(ipk, rid, cred, crid, orid, sid)
 	}
 	elapsed := time.Since(start)
 	b.ReportMetric(float64(elapsed.Milliseconds())/float64(b.N), "ms/op")
