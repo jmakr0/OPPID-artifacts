@@ -162,28 +162,28 @@ func (pp *PublicParams) Response(isk *PrivateKey, auth Auth, crid UsrCommitment,
 	return Token{sig, by}, nil
 }
 
-func (pp *PublicParams) Finalize(ipk *PublicKey, rid, ctx, sid []byte, crid UsrCommitment, orid UsrOpening, t Token) (FinalizedToken, PairwisePseudonymousIdentifier, error) {
+func (pp *PublicParams) Finalize(ipk *PublicKey, rid, ctx, sid []byte, crid UsrCommitment, orid UsrOpening, tk Token) (FinalizedToken, PairwisePseudonymousIdentifier, error) {
 	bx := utils.GenerateG1Point(orid.b, hashToPoint(rid, []byte(dstStr)))
-	tkBytes := tokenBytes(&crid.com, bx, t.by, ctx, sid)
+	tkBytes := tokenBytes(&crid.com, bx, tk.by, ctx, sid)
 
-	if !pp.pc.Open(rid, crid.com, orid.opn) || !pp.rsa.Verify(ipk.rsaPk, tkBytes, t.sig) {
+	if !pp.pc.Open(rid, crid.com, orid.opn) || !pp.rsa.Verify(ipk.rsaPk, tkBytes, tk.sig) {
 		return FinalizedToken{}, nil, errors.New("commitment or signature did not verify")
 	}
 
 	bldInv := new(GG.Scalar)
 	bldInv.Inv(orid.b)
-	y := utils.GenerateG1Point(bldInv, t.by)
+	y := utils.GenerateG1Point(bldInv, tk.by)
 
-	return FinalizedToken{crid.com, orid.opn, orid.b, t.by, t.sig}, y.Bytes(), nil
+	return FinalizedToken{crid.com, orid.opn, orid.b, tk.by, tk.sig}, y.Bytes(), nil
 }
 
-func (pp *PublicParams) Verify(ipk *PublicKey, rid, ppid, ctx, sid []byte, ft FinalizedToken) bool {
-	bx := utils.GenerateG1Point(ft.b, hashToPoint(rid, []byte(dstStr)))
-	tkBytes := tokenBytes(&ft.com, bx, ft.by, ctx, sid)
+func (pp *PublicParams) Verify(ipk *PublicKey, rid, ppid, ctx, sid []byte, ftk FinalizedToken) bool {
+	bx := utils.GenerateG1Point(ftk.b, hashToPoint(rid, []byte(dstStr)))
+	tkBytes := tokenBytes(&ftk.com, bx, ftk.by, ctx, sid)
 
 	bldInv := new(GG.Scalar)
-	bldInv.Inv(ft.b)
-	y := utils.GenerateG1Point(bldInv, ft.by)
+	bldInv.Inv(ftk.b)
+	y := utils.GenerateG1Point(bldInv, ftk.by)
 
-	return pp.pc.Open(rid, ft.com, ft.opening) && pp.rsa.Verify(ipk.rsaPk, tkBytes, ft.sig) && bytes.Equal(ppid, y.Bytes())
+	return pp.pc.Open(rid, ftk.com, ftk.opening) && pp.rsa.Verify(ipk.rsaPk, tkBytes, ftk.sig) && bytes.Equal(ppid, y.Bytes())
 }

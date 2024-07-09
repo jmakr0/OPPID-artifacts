@@ -29,8 +29,7 @@ type Token struct {
 }
 
 func Setup() *PublicParams {
-	rsaKeySize := 2048
-	return &PublicParams{rsa256.Setup(rsaKeySize)}
+	return &PublicParams{rsa256.Setup(2048)}
 }
 
 func (pp *PublicParams) KeyGen() (*PrivateKey, *PublicKey) {
@@ -39,7 +38,7 @@ func (pp *PublicParams) KeyGen() (*PrivateKey, *PublicKey) {
 	var salt [32]byte
 	_, err := rand.Read(salt[:])
 	if err != nil {
-		log.Fatalf("Failed to generate random salt: %v", err)
+		log.Fatalf("failed to generate random salt: %v", err)
 	}
 
 	return &PrivateKey{sk, &salt}, &PublicKey{pk}

@@ -5,11 +5,26 @@ import (
 	"time"
 )
 
-func BenchmarkOPPIDRegister(b *testing.B) {
+func setupBenchmark() (*PublicParams, []byte, []byte, []byte, []byte, *PrivateKey, *PublicKey, Credential, UsrOpening, UsrCommitment, Auth, Token, FinalizedToken, PairwisePseudonymousIdentifier) {
 	oppid := Setup()
-	isk, _ := oppid.KeyGen()
-	rid := []byte("Test-RID")
+	isk, ipk := oppid.KeyGen()
 
+	rid := []byte("Test-RID")
+	uid := []byte("alice.doe@idp.com")
+	ctx := []byte("Test-CTX")
+	sid := []byte("Test-SID")
+
+	cred := oppid.Register(isk, rid)
+	orid, crid := oppid.Init(rid)
+	auth, _ := oppid.Request(ipk, rid, cred, crid, orid, sid)
+	tk, _ := oppid.Response(isk, auth, crid, uid, ctx, sid)
+	ftk, ppid, _ := oppid.Finalize(ipk, rid, ctx, sid, crid, orid, tk)
+
+	return oppid, rid, uid, ctx, sid, isk, ipk, cred, orid, crid, auth, tk, ftk, ppid
+}
+
+func BenchmarkOPPIDRegister(b *testing.B) {
+	oppid, rid, _, _, _, isk, _, _, _, _, _, _, _, _ := setupBenchmark()
 	b.ResetTimer()
 	start := time.Now()
 	for i := 0; i < b.N; i++ {
@@ -20,9 +35,7 @@ func BenchmarkOPPIDRegister(b *testing.B) {
 }
 
 func BenchmarkOPPIDInit(b *testing.B) {
-	oppid := Setup()
-	rid := []byte("Test-RID")
-
+	oppid, rid, _, _, _, _, _, _, _, _, _, _, _, _ := setupBenchmark()
 	b.ResetTimer()
 	start := time.Now()
 	for i := 0; i < b.N; i++ {
@@ -33,81 +46,56 @@ func BenchmarkOPPIDInit(b *testing.B) {
 }
 
 func BenchmarkOPPIDRequest(b *testing.B) {
-	oppid := Setup()
-	_, pk := oppid.KeyGen()
-	isk, _ := oppid.KeyGen()
-	rid := []byte("Test-RID")
-	cred := oppid.Register(isk, rid)
-	orid, crid := oppid.Init(rid)
-	sid := []byte("Test-SID")
-
+	oppid, rid, _, _, sid, _, ipk, cred, orid, crid, _, _, _, _ := setupBenchmark()
 	b.ResetTimer()
 	start := time.Now()
 	for i := 0; i < b.N; i++ {
-		oppid.Request(pk, rid, cred, crid, orid, sid)
+		_, err := oppid.Request(ipk, rid, cred, crid, orid, sid)
+		if err != nil {
+			b.Fatal(err)
+		}
 	}
 	elapsed := time.Since(start)
 	b.ReportMetric(float64(elapsed.Milliseconds())/float64(b.N), "ms/op")
 }
 
 func BenchmarkOPPIDResponse(b *testing.B) {
-	oppid := Setup()
-	isk, pk := oppid.KeyGen()
-	rid := []byte("Test-RID")
-	cred := oppid.Register(isk, rid)
-	orid, crid := oppid.Init(rid)
-	sid := []byte("Test-SID")
-	auth, _ := oppid.Request(pk, rid, cred, crid, orid, sid)
-	uid := []byte("Test-UID")
-	ctx := []byte("Test-CTX")
-
+	oppid, _, uid, ctx, sid, isk, _, _, _, crid, auth, _, _, _ := setupBenchmark()
 	b.ResetTimer()
 	start := time.Now()
 	for i := 0; i < b.N; i++ {
-		oppid.Response(isk, auth, crid, uid, ctx, sid)
+		_, err := oppid.Response(isk, auth, crid, uid, ctx, sid)
+		if err != nil {
+			b.Fatal(err)
+		}
 	}
 	elapsed := time.Since(start)
 	b.ReportMetric(float64(elapsed.Milliseconds())/float64(b.N), "ms/op")
 }
 
 func BenchmarkOPPIDFinalize(b *testing.B) {
-	oppid := Setup()
-	isk, pk := oppid.KeyGen()
-	rid := []byte("Test-RID")
-	cred := oppid.Register(isk, rid)
-	orid, crid := oppid.Init(rid)
-	sid := []byte("Test-SID")
-	auth, _ := oppid.Request(pk, rid, cred, crid, orid, sid)
-	uid := []byte("Test-UID")
-	ctx := []byte("Test-CTX")
-	token, _ := oppid.Response(isk, auth, crid, uid, ctx, sid)
-
+	oppid, rid, _, ctx, sid, _, ipk, _, orid, crid, _, tk, _, _ := setupBenchmark()
 	b.ResetTimer()
 	start := time.Now()
 	for i := 0; i < b.N; i++ {
-		oppid.Finalize(pk, rid, ctx, sid, crid, orid, token)
+		_, _, err := oppid.Finalize(ipk, rid, ctx, sid, crid, orid, tk)
+		if err != nil {
+			b.Fatal(err)
+		}
 	}
 	elapsed := time.Since(start)
 	b.ReportMetric(float64(elapsed.Milliseconds())/float64(b.N), "ms/op")
 }
 
 func BenchmarkOPPIDVerify(b *testing.B) {
-	oppid := Setup()
-	isk, pk := oppid.KeyGen()
-	rid := []byte("Test-RID")
-	cred := oppid.Register(isk, rid)
-	orid, crid := oppid.Init(rid)
-	sid := []byte("Test-SID")
-	auth, _ := oppid.Request(pk, rid, cred, crid, orid, sid)
-	uid := []byte("Test-UID")
-	ctx := []byte("Test-CTX")
-	token, _ := oppid.Response(isk, auth, crid, uid, ctx, sid)
-	finalToken, ppid, _ := oppid.Finalize(pk, rid, ctx, sid, crid, orid, token)
-
+	oppid, rid, _, ctx, sid, _, ipk, _, _, _, _, _, ftk, ppid := setupBenchmark()
 	b.ResetTimer()
 	start := time.Now()
 	for i := 0; i < b.N; i++ {
-		oppid.Verify(pk, rid, ppid, ctx, sid, finalToken)
+		isValid := oppid.Verify(ipk, rid, ppid, ctx, sid, ftk)
+		if !isValid {
+			b.Fatalf("oppid verify failed")
+		}
 	}
 	elapsed := time.Since(start)
 	b.ReportMetric(float64(elapsed.Milliseconds())/float64(b.N), "ms/op")
