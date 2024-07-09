@@ -3,7 +3,7 @@
 package oidc
 
 import (
-	"OPPID/pkg/sign/rsa256"
+	RSA "OPPID/pkg/sign/rsa256"
 	"bytes"
 	"crypto/rand"
 	"crypto/sha256"
@@ -11,27 +11,27 @@ import (
 )
 
 type PublicParams struct {
-	rsa *rsa256.PublicParams
+	rsa *RSA.PublicParams
 }
 
 type PublicKey struct {
-	key *rsa256.PublicKey
+	key *RSA.PublicKey
 }
 
 type PrivateKey struct {
-	key  *rsa256.PrivateKey
+	key  *RSA.PrivateKey
 	salt *[32]byte
 }
 
 type PPID = []byte
 
 type Token struct {
-	sig  rsa256.Signature
+	sig  RSA.Signature
 	ppid PPID
 }
 
 func Setup() *PublicParams {
-	return &PublicParams{rsa256.Setup(2048)}
+	return &PublicParams{RSA.Setup(2048)}
 }
 
 func (pp *PublicParams) KeyGen() (*PrivateKey, *PublicKey) {
