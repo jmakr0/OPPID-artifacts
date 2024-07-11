@@ -143,7 +143,7 @@ func (pp *PublicParams) Request(ipk *PublicKey, rid []byte, cred Credential, cri
 	p := createPublicInputs(pp.pc, ipk.psPk, &crid.com)
 	aux := createAuxBuffer(bx, sid)
 
-	pi := NIZK.New(w, p, aux, pp.dstComSig)
+	pi := NIZK.Prove(w, p, aux, pp.dstComSig)
 	return Auth{pi}, nil
 }
 

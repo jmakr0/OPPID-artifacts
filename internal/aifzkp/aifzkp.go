@@ -110,7 +110,7 @@ func (pp *PublicParams) Request(ipk *PublicKey, rid []byte, c Credential, crid U
 	p.PS = ipk.psPk
 	p.Com = &crid.com
 
-	pi := NIZK.New(w, p, sid, pp.dstComSig)
+	pi := NIZK.Prove(w, p, sid, pp.dstComSig)
 
 	return Auth{pi}
 }

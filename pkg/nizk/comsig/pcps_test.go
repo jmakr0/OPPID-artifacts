@@ -52,7 +52,7 @@ func TestNewVerify(t *testing.T) {
 
 	// Call KeyGen to generate the proof
 	aux := []byte("auxiliary data")
-	pi := New(w, p, aux)
+	pi := Prove(w, p, aux)
 
 	isValid := Verify(pi, p, aux)
 
@@ -104,7 +104,7 @@ func TestVerify_InvalidProof(t *testing.T) {
 
 	// Call KeyGen to generate the proof
 	aux := []byte("auxiliary data")
-	proof := New(w, p, aux)
+	proof := Prove(w, p, aux)
 
 	// Modify the proof to make it invalid
 	proof.r1 = utils.GenerateRandomScalar()

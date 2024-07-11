@@ -49,7 +49,7 @@ func challenge(c *PC.Commitment, a1 *GG.G1, a2 *GG.Gt, aux []byte) GG.Scalar {
 	return utils.HashToScalar(data, []byte(dstStr))
 }
 
-func New(w Witnesses, p PublicInputs, aux []byte, dst []byte) Proof {
+func Prove(w Witnesses, p PublicInputs, aux []byte, dst []byte) Proof {
 	u1 := utils.GenerateRandomScalar() // for commitment
 	u2 := utils.GenerateRandomScalar() // for commitment
 	u3 := utils.GenerateRandomScalar() // for signature

@@ -28,7 +28,7 @@ type Proof struct {
 	s2 *GG.Scalar
 }
 
-func New(p *PublicInput, w *Witness) *Proof {
+func Prove(p *PublicInput, w *Witness) *Proof {
 	u1 := utils.GenerateRandomScalar()
 	u2 := utils.GenerateRandomScalar()
 

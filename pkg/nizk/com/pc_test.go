@@ -14,7 +14,7 @@ func TestNewVerify(t *testing.T) {
 	p := &PublicInput{params: pc, com: commit}
 	w := &Witness{msg: msg, opening: o}
 
-	pi := New(p, w)
+	pi := Prove(p, w)
 
 	isValid := Verify(p, pi)
 	if !isValid {
