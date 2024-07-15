@@ -1,9 +1,17 @@
+// Implements the core cryptographic operations of the Pairwise POIDC protocol [1].
+
+// References
+// [1] https://dl.acm.org/doi/10.1145/3320269.3384724
+
 package ppoidc
 
 import (
+	NIZK "OPPID/pkg/nizk/hash"
 	RSA "OPPID/pkg/sign/rsa256"
 	"OPPID/pkg/utils"
 	"bytes"
+	"crypto/rand"
+	"crypto/sha256"
 	"errors"
 	GG "github.com/cloudflare/circl/ecc/bls12381"
 )
@@ -11,7 +19,8 @@ import (
 const dstStr = "OPPID_BLS12384_XMD:SHA-256_PP-OIDC_"
 
 type PublicParams struct {
-	rsa *RSA.PublicParams
+	rsa      *RSA.PublicParams
+	proofSys *NIZK.PublicParams
 }
 
 type PublicKey struct {
@@ -22,10 +31,22 @@ type PrivateKey struct {
 	rsaSk *RSA.PrivateKey
 }
 
+type UserId = []byte
+
+type ClientId = []byte
+type ClientName = []byte
+type RedirectUri = []byte
+type Nonce = []byte
+
+type MaskedAud = []byte
+type PairwiseSub = []byte
+type MaskedSub = []byte
+
 type ClientIDBinding struct {
-	clientID []byte
-	enPtRP   []byte
-	sig      RSA.Signature
+	id   ClientId
+	name ClientName
+	ruri RedirectUri
+	sig  RSA.Signature
 }
 
 type Token struct {
@@ -44,8 +65,12 @@ type Token struct {
 //	return tkBuf.Bytes()
 //}
 
-func Setup() *PublicParams {
-	return &PublicParams{RSA.Setup(2048)}
+func Setup() (*PublicParams, error) {
+	proofSys, err := NIZK.Setup()
+	if err != nil {
+		return nil, err
+	}
+	return &PublicParams{RSA.Setup(2048), proofSys}, nil
 }
 
 func (pp *PublicParams) KeyGen() (*PrivateKey, *PublicKey) {
@@ -53,33 +78,63 @@ func (pp *PublicParams) KeyGen() (*PrivateKey, *PublicKey) {
 	return &PrivateKey{rsaSk}, &PublicKey{rsaPk}
 }
 
-func (pp *PublicParams) Register(k *PrivateKey, id []byte, enPt EnPtRP) ClientIDBinding {
-	r := utils.HashToScalar(id, []byte(dstStr))
-	idRP := utils.GenerateG1Point(&r, GG.G1Generator())
+func (pp *PublicParams) Register(k *PrivateKey, name ClientName, ruri RedirectUri) ClientIDBinding {
+	var id [16]byte
+	_, _ = rand.Read(id[:])
 
 	var buf bytes.Buffer
 	buf.Write([]byte(dstStr + "CERT"))
-	buf.Write(idRP.Bytes())
-	buf.Write(enPt)
+	buf.Write(id[:])
+	buf.Write(name)
+	buf.Write(ruri)
 
-	return ClientIDBinding{idRP, enPt, pp.rsa.Sign(k.rsaSk, buf.Bytes())}
+	var bin ClientIDBinding
+	bin.id = id[:]
+	bin.name = name
+	bin.ruri = ruri
+	bin.sig = pp.rsa.Sign(k.rsaSk, buf.Bytes())
+
+	return bin
 }
 
-func (pp *PublicParams) Init(ipk *PublicKey, cert *ClientIDBinding) (*PidRP, *GG.Scalar, error) {
+// Init maps step (5) of the protocol [1, p.7]
+func (pp *PublicParams) Init(ipk *PublicKey, uid UserId, cert *ClientIDBinding, nonceRP Nonce) (*PidRP, *GG.Scalar, error) {
 	var buf bytes.Buffer
 	buf.Write([]byte(dstStr + "CERT"))
-	buf.Write(cert.idRP.Bytes())
-	buf.Write(cert.enPtRP)
+	buf.Write(cert.id)
+	buf.Write(cert.name)
+	buf.Write(cert.ruri)
 
 	isValid := pp.rsa.Verify(ipk.rsaPk, buf.Bytes(), cert.sig)
 	if !isValid {
 		return nil, nil, errors.New("invalid certificate")
 	}
 
-	t := utils.GenerateRandomScalar()
-	pidRP := utils.GenerateG1Point(t, cert.idRP)
+	var nonceUser1 [16]byte
+	_, _ = rand.Read(nonceUser1[:])
 
-	return pidRP, t, nil
+	var nonceUser2 [16]byte
+	_, _ = rand.Read(nonceUser2[:])
+
+	hash := sha256.New()
+	hash.Write(cert.id)
+	hash.Write(nonceRP)
+	hash.Write(nonceUser1[:])
+	maskedAud := hash.Sum(nil)
+
+	hash.Reset()
+	hash.Write(uid)
+	hash.Write(cert.id)
+	pairwiseSub := hash.Sum(nil)
+
+	hash.Reset()
+	hash.Write(pairwiseSub)
+	hash.Write(nonceUser2[:])
+	maskedSub := hash.Sum(nil)
+
+	witness := pp.proofSys.NewWitness()
+
+	return
 }
 
 func (pp *PublicParams) Request(idRP *IdRP, t *GG.Scalar) *PidRP {

@@ -25,7 +25,10 @@ type PublicParams struct{ cs constraint.ConstraintSystem }
 type ProvingKey struct{ key groth16.ProvingKey }
 type VerifyingKey struct{ key groth16.VerifyingKey }
 
-type Witness struct{ witness witness.Witness }
+type Witness struct {
+	assignment *Circuit // makes testing easier
+	witness    witness.Witness
+}
 type PublicWitness struct{ witness witness.Witness }
 
 type Proof struct{ proof groth16.Proof }
@@ -180,7 +183,7 @@ func Setup() (*PublicParams, error) {
 		}
 		return &PublicParams{cs}, nil
 	} else {
-		cs, csErr := frontend.Compile(ecc.BLS12_381.ScalarField(), r1cs.NewBuilder, &SHA256Circuit{})
+		cs, csErr := frontend.Compile(ecc.BLS12_381.ScalarField(), r1cs.NewBuilder, &Circuit{})
 		if csErr != nil {
 			return nil, csErr
 		}
@@ -208,29 +211,51 @@ func (pp *PublicParams) KeyGen() (*ProvingKey, *VerifyingKey, error) {
 	}
 }
 
-func (pp *PublicParams) NewWitness(input string) (*Witness, error) {
-	if len(input) > MaxInputLength {
-		return nil, fmt.Errorf("invalid input length %d, expected %d", len(input), MaxInputLength)
+// NewWitness returns a witness for image = H( H(pub || x) || y) with H = sha256, where pub is public and x,y stay secret
+func (pp *PublicParams) NewWitness(x, y, pub []byte) (*Witness, error) {
+	if len(x) > MaxInputLength || len(y) > MaxInputLength || len(pub) > MaxInputLength {
+		return nil, fmt.Errorf("invalid input length, expects at most %d", MaxInputLength)
 	}
-	var inputBytes [MaxInputLength]byte
-	copy(inputBytes[:], input)
 
-	digest := sha256.Sum256(inputBytes[:])
+	// Copy input to arrays with max length
+	var inPubBytes [MaxInputLength]byte
+	copy(inPubBytes[:], pub)
 
-	var preImage [MaxInputLength]uints.U8
-	var image [32]uints.U8
+	var inXBytes [MaxInputLength]byte
+	copy(inXBytes[:], x)
+
+	var inYBytes [MaxInputLength]byte
+	copy(inYBytes[:], y)
+
+	// Create hashes
+	innerPreimage := append(inPubBytes[:], inXBytes[:]...)
+	innerHash := sha256.Sum256(innerPreimage)
+
+	preimage := append(innerHash[:], inYBytes[:]...)
+	hash := sha256.Sum256(preimage)
+
+	// Transfer to correct format for circuit
+	var preimagePubU8 [MaxInputLength]uints.U8
+	var xU8 [MaxInputLength]uints.U8
+	var yU8 [MaxInputLength]uints.U8
 	for i := 0; i < MaxInputLength; i++ {
-		preImage[i] = uints.NewU8(inputBytes[i])
+		preimagePubU8[i] = uints.NewU8(inPubBytes[i])
+		xU8[i] = uints.NewU8(inXBytes[i])
+		yU8[i] = uints.NewU8(inYBytes[i])
 	}
-	for i, d := range digest {
-		image[i] = uints.NewU8(d)
+
+	var imageU8 [OutputLength]uints.U8
+	for i, d := range hash {
+		imageU8[i] = uints.NewU8(d)
 	}
-	assignment := &SHA256Circuit{preImage, image}
+
+	assignment := &Circuit{xU8, yU8, preimagePubU8, imageU8}
 	w, err := frontend.NewWitness(assignment, ecc.BLS12_381.ScalarField())
 	if err != nil {
 		return nil, err
 	}
-	return &Witness{w}, nil
+
+	return &Witness{assignment, w}, nil
 }
 
 func (pp *PublicParams) Prove(w *Witness, pk *ProvingKey) (*Proof, *PublicWitness, error) {
