@@ -258,23 +258,23 @@ func (pp *PublicParams) NewWitness(x, y, pub []byte) (*Witness, error) {
 	return &Witness{assignment, w}, nil
 }
 
-func (pp *PublicParams) Prove(w *Witness, pk *ProvingKey) (*Proof, *PublicWitness, error) {
+func (pp *PublicParams) Prove(w *Witness, pk *ProvingKey) (Proof, PublicWitness, error) {
 	proof, err := groth16.Prove(pp.cs, pk.key, w.witness)
 	if err != nil {
-		return nil, nil, err
+		return Proof{}, PublicWitness{}, err
 	}
 	pubWitness, err := w.witness.Public()
 	if err != nil {
-		return nil, nil, err
+		return Proof{}, PublicWitness{}, err
 	}
 
-	return &Proof{proof}, &PublicWitness{pubWitness}, nil
+	return Proof{proof}, PublicWitness{pubWitness}, nil
 }
 
-func (pp *PublicParams) Verify(p *Proof, pw *PublicWitness, vk *VerifyingKey) (bool, error) {
+func (pp *PublicParams) Verify(p Proof, pw PublicWitness, vk *VerifyingKey) bool {
 	err := groth16.Verify(p.proof, vk.key, pw.witness)
 	if err != nil {
-		return false, err
+		return false
 	}
-	return true, nil
+	return true
 }

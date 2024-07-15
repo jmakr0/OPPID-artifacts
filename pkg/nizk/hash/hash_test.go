@@ -98,10 +98,7 @@ func TestSHA256ProveVerify(t *testing.T) {
 		t.Fatal(errP)
 	}
 
-	isValid, errV := sha256Proof.Verify(proof, pubWitness, vk)
-	if errV != nil {
-		t.Fatal(errV)
-	}
+	isValid := sha256Proof.Verify(proof, pubWitness, vk)
 	if !isValid {
 		t.Fatal("invalid proof, expected proof to be valid")
 	}

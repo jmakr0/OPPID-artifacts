@@ -8,19 +8,19 @@ package ppoidc
 import (
 	NIZK "OPPID/pkg/nizk/hash"
 	RSA "OPPID/pkg/sign/rsa256"
-	"OPPID/pkg/utils"
 	"bytes"
 	"crypto/rand"
 	"crypto/sha256"
 	"errors"
-	GG "github.com/cloudflare/circl/ecc/bls12381"
 )
 
 const dstStr = "OPPID_BLS12384_XMD:SHA-256_PP-OIDC_"
 
 type PublicParams struct {
-	rsa      *RSA.PublicParams
-	proofSys *NIZK.PublicParams
+	rsa       *RSA.PublicParams
+	hashProof *NIZK.PublicParams
+	pk        *NIZK.ProvingKey
+	vk        *NIZK.VerifyingKey
 }
 
 type PublicKey struct {
@@ -49,28 +49,42 @@ type ClientIDBinding struct {
 	sig  RSA.Signature
 }
 
-type Token struct {
-	pidU []byte
-	sig  RSA.Signature
+type Request struct {
+	maskedAud     MaskedAud
+	maskedSub     MaskedSub
+	proof         NIZK.Proof
+	publicWitness NIZK.PublicWitness
 }
 
-//// tokenBytes generates a byte representation of the token
-//func tokenBytes(pidRP *PidRP, pidU *PidU, ctx, sid []byte) []byte {
-//	tkBuf := bytes.NewBuffer(nil)
-//	tkBuf.Write([]byte(dstStr + "TOKEN"))
-//	tkBuf.Write(pidRP.Bytes())
-//	tkBuf.Write(pidU.Bytes())
-//	tkBuf.Write(ctx)
-//	tkBuf.Write(sid)
-//	return tkBuf.Bytes()
-//}
+type PrivateIdToken struct {
+	aud MaskedAud
+	sub MaskedSub
+	ctx []byte
+	sid []byte
+	sig RSA.Signature
+}
+
+// tokenBytes generates a byte representation of the token
+func tokenBytes(maskedAud MaskedAud, maskedSub MaskedSub, ctx, sid []byte) []byte {
+	tkBuf := bytes.NewBuffer(nil)
+	tkBuf.Write([]byte(dstStr + "TOKEN"))
+	tkBuf.Write(maskedAud)
+	tkBuf.Write(maskedSub)
+	tkBuf.Write(ctx)
+	tkBuf.Write(sid)
+	return tkBuf.Bytes()
+}
 
 func Setup() (*PublicParams, error) {
-	proofSys, err := NIZK.Setup()
+	hashProof, err := NIZK.Setup()
 	if err != nil {
 		return nil, err
 	}
-	return &PublicParams{RSA.Setup(2048), proofSys}, nil
+	pk, vk, errKGen := hashProof.KeyGen()
+	if errKGen != nil {
+		panic(errKGen)
+	}
+	return &PublicParams{RSA.Setup(2048), hashProof, pk, vk}, nil
 }
 
 func (pp *PublicParams) KeyGen() (*PrivateKey, *PublicKey) {
@@ -98,7 +112,7 @@ func (pp *PublicParams) Register(k *PrivateKey, name ClientName, ruri RedirectUr
 }
 
 // Init maps step (5) of the protocol [1, p.7]
-func (pp *PublicParams) Init(ipk *PublicKey, uid UserId, cert *ClientIDBinding, nonceRP Nonce) (*PidRP, *GG.Scalar, error) {
+func (pp *PublicParams) Init(ipk *PublicKey, uid UserId, cert ClientIDBinding, nonceRP Nonce) (Request, error) {
 	var buf bytes.Buffer
 	buf.Write([]byte(dstStr + "CERT"))
 	buf.Write(cert.id)
@@ -107,56 +121,76 @@ func (pp *PublicParams) Init(ipk *PublicKey, uid UserId, cert *ClientIDBinding, 
 
 	isValid := pp.rsa.Verify(ipk.rsaPk, buf.Bytes(), cert.sig)
 	if !isValid {
-		return nil, nil, errors.New("invalid certificate")
+		return Request{}, errors.New("invalid certificate")
 	}
 
-	var nonceUser1 [16]byte
-	_, _ = rand.Read(nonceUser1[:])
+	var nonce1 [16]byte
+	_, _ = rand.Read(nonce1[:])
 
-	var nonceUser2 [16]byte
-	_, _ = rand.Read(nonceUser2[:])
+	var nonce2 [16]byte
+	_, _ = rand.Read(nonce2[:])
 
 	hash := sha256.New()
 	hash.Write(cert.id)
 	hash.Write(nonceRP)
-	hash.Write(nonceUser1[:])
+	hash.Write(nonce1[:])
 	maskedAud := hash.Sum(nil)
 
+	// Need to pad arrays due to the hash that will be proven via the circuit
+	var uidBytes [NIZK.MaxInputLength]byte
+	copy(uidBytes[:], uid)
+
+	var cidBytes [NIZK.MaxInputLength]byte
+	copy(cidBytes[:], cert.id)
+
 	hash.Reset()
-	hash.Write(uid)
-	hash.Write(cert.id)
+	hash.Write(uidBytes[:])
+	hash.Write(cidBytes[:])
 	pairwiseSub := hash.Sum(nil)
+
+	var nonce2Bytes [NIZK.MaxInputLength]byte
+	copy(nonce2Bytes[:], nonce2[:])
 
 	hash.Reset()
 	hash.Write(pairwiseSub)
-	hash.Write(nonceUser2[:])
+	hash.Write(nonce2Bytes[:])
 	maskedSub := hash.Sum(nil)
 
-	witness := pp.proofSys.NewWitness()
-
-	return
-}
-
-func (pp *PublicParams) Request(idRP *IdRP, t *GG.Scalar) *PidRP {
-	return utils.GenerateG1Point(t, idRP)
-}
-
-func (pp *PublicParams) Response(isk *PrivateKey, pidRP *PidRP, uid *IdU, ctx, sid []byte) Token {
-	pidU := utils.GenerateG1Point(uid, pidRP)
-	tkBytes := tokenBytes(pidRP, pidU, ctx, sid)
-	sig := pp.rsa.Sign(isk.rsaSk, tkBytes)
-
-	return Token{pidU, sig}
-}
-
-func (pp *PublicParams) Verify(ipk *PublicKey, pidRP *PidRP, t *GG.Scalar, ctx, sid []byte, tk Token) *Acct {
-	tkBytes := tokenBytes(pidRP, tk.pidU, ctx, sid)
-	if !pp.rsa.Verify(ipk.rsaPk, tkBytes, tk.sig) {
-		return nil
+	witness, err := pp.hashProof.NewWitness(cert.id, nonce2[:], uid)
+	if err != nil {
+		return Request{}, err
 	}
 
-	tInv := new(GG.Scalar)
-	tInv.Inv(t)
+	proof, pubWitness, errP := pp.hashProof.Prove(witness, pp.pk)
+	if errP != nil {
+		return Request{}, errP
+	}
 
-	return utils.GenerateG1Point(t, tk.pidU)
+	return Request{maskedAud, maskedSub, proof, pubWitness}, nil
+}
+
+func (pp *PublicParams) Response(isk *PrivateKey, uid UserId, req Request, ctx, sid []byte) (PrivateIdToken, error) {
+	if !pp.hashProof.Verify(req.proof, req.publicWitness, pp.vk) {
+		return PrivateIdToken{}, errors.New("invalid proof")
+	}
+	tkBytes := tokenBytes(req.maskedAud, req.maskedSub, ctx, sid)
+	sig := pp.rsa.Sign(isk.rsaSk, tkBytes)
+
+	return PrivateIdToken{req.maskedAud, req.maskedSub, ctx, sid, sig}, nil
+}
+
+func (pp *PublicParams) Verify(ipk *PublicKey, id ClientId, nonceRP Nonce, nonceUsr1 Nonce, nonceUsr2 Nonce, pairwiseSub PairwiseSub, tk PrivateIdToken) bool {
+	hash := sha256.New()
+	hash.Write(id)
+	hash.Write(nonceRP)
+	hash.Write(nonceUsr1)
+	maskedAud := hash.Sum(nil)
+
+	hash.Reset()
+	hash.Write(pairwiseSub)
+	hash.Write(nonceUsr2)
+	maskedSub := hash.Sum(nil)
+
+	tkBytes := tokenBytes(maskedAud, maskedSub, tk.ctx, tk.sid)
+	return pp.rsa.Verify(ipk.rsaPk, tkBytes, tk.sig)
 }
