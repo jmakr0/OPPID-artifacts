@@ -50,10 +50,15 @@ type ClientIDBinding struct {
 }
 
 type Request struct {
-	maskedAud     MaskedAud
-	maskedSub     MaskedSub
-	proof         NIZK.Proof
-	publicWitness NIZK.PublicWitness
+	maskedAud MaskedAud
+	maskedSub MaskedSub
+	proof     NIZK.Proof
+}
+
+type UserRPState struct {
+	nonce1      Nonce
+	nonce2      Nonce
+	PairwiseSub PairwiseSub
 }
 
 type PrivateIdToken struct {
@@ -112,7 +117,7 @@ func (pp *PublicParams) Register(k *PrivateKey, name ClientName, ruri RedirectUr
 }
 
 // Init maps step (5) of the protocol [1, p.7]
-func (pp *PublicParams) Init(ipk *PublicKey, uid UserId, cert ClientIDBinding, nonceRP Nonce) (Request, error) {
+func (pp *PublicParams) Init(ipk *PublicKey, uid UserId, cert ClientIDBinding, nonceRP Nonce) (Request, UserRPState, error) {
 	var buf bytes.Buffer
 	buf.Write([]byte(dstStr + "CERT"))
 	buf.Write(cert.id)
@@ -121,7 +126,7 @@ func (pp *PublicParams) Init(ipk *PublicKey, uid UserId, cert ClientIDBinding, n
 
 	isValid := pp.rsa.Verify(ipk.rsaPk, buf.Bytes(), cert.sig)
 	if !isValid {
-		return Request{}, errors.New("invalid certificate")
+		return Request{}, UserRPState{}, errors.New("invalid certificate")
 	}
 
 	var nonce1 [16]byte
@@ -158,19 +163,23 @@ func (pp *PublicParams) Init(ipk *PublicKey, uid UserId, cert ClientIDBinding, n
 
 	witness, err := pp.hashProof.NewWitness(cert.id, nonce2[:], uid)
 	if err != nil {
-		return Request{}, err
+		return Request{}, UserRPState{}, err
 	}
 
-	proof, pubWitness, errP := pp.hashProof.Prove(witness, pp.pk)
+	proof, errP := pp.hashProof.Prove(witness, pp.pk)
 	if errP != nil {
-		return Request{}, errP
+		return Request{}, UserRPState{}, errP
 	}
 
-	return Request{maskedAud, maskedSub, proof, pubWitness}, nil
+	return Request{maskedAud, maskedSub, proof}, UserRPState{nonce1[:], nonce2[:], pairwiseSub}, nil
 }
 
 func (pp *PublicParams) Response(isk *PrivateKey, uid UserId, req Request, ctx, sid []byte) (PrivateIdToken, error) {
-	if !pp.hashProof.Verify(req.proof, req.publicWitness, pp.vk) {
+	pubWitness, err := pp.hashProof.NewPublicWitness(uid)
+	if err != nil {
+		return PrivateIdToken{}, err
+	}
+	if !pp.hashProof.Verify(req.proof, pubWitness, pp.vk) {
 		return PrivateIdToken{}, errors.New("invalid proof")
 	}
 	tkBytes := tokenBytes(req.maskedAud, req.maskedSub, ctx, sid)

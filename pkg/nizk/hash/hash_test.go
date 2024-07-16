@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestSHA256Circuit(t *testing.T) {
+func TestHashCircuit(t *testing.T) {
 	hashProof, err := Setup()
 	if err != nil {
 		t.Fatal(err)
@@ -25,7 +25,7 @@ func TestSHA256Circuit(t *testing.T) {
 	assert.NoError(errProof)
 }
 
-func TestSHA256CircuitWithManipulatedHash(t *testing.T) {
+func TestHashCircuitWithManipulatedHash(t *testing.T) {
 	hashProof, err := Setup()
 	if err != nil {
 		t.Fatal(err)
@@ -45,7 +45,7 @@ func TestSHA256CircuitWithManipulatedHash(t *testing.T) {
 	assert.Error(errProof)
 }
 
-func TestSHA256CircuitWithManipulatedPreImage(t *testing.T) {
+func TestHashCircuitWithManipulatedPreImage(t *testing.T) {
 	hashProof, err := Setup()
 	if err != nil {
 		t.Fatal(err)
@@ -65,7 +65,7 @@ func TestSHA256CircuitWithManipulatedPreImage(t *testing.T) {
 	assert.Error(errProof)
 }
 
-func TestSHA256KeyGen(t *testing.T) {
+func TestHashKeyGen(t *testing.T) {
 	sha256Proof, err := Setup()
 	if err != nil {
 		t.Fatal(err)
@@ -77,28 +77,37 @@ func TestSHA256KeyGen(t *testing.T) {
 	}
 }
 
-func TestSHA256ProveVerify(t *testing.T) {
-	sha256Proof, err := Setup()
+func TestHashProveVerify(t *testing.T) {
+	hashProof, err := Setup()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	pk, vk, errKGen := sha256Proof.KeyGen()
+	pk, vk, errKGen := hashProof.KeyGen()
 	if errKGen != nil {
 		t.Fatal(errKGen)
 	}
 
-	witness, errW := sha256Proof.NewWitness([]byte("secret X"), []byte("secret Y"), []byte("public preimage segment"))
+	sharedInput := []byte("public preimage segment")
+
+	witness, errW := hashProof.NewWitness([]byte("secret X"), []byte("secret Y"), sharedInput)
 	if errW != nil {
 		t.Fatal(errW)
 	}
 
-	proof, pubWitness, errP := sha256Proof.Prove(witness, pk)
+	proof, errP := hashProof.Prove(witness, pk)
 	if errP != nil {
 		t.Fatal(errP)
 	}
 
-	isValid := sha256Proof.Verify(proof, pubWitness, vk)
+	//pubWitness, errPW := witness.witness.Public()
+	pubWitness, errPW := hashProof.NewPublicWitness(sharedInput, witness.image)
+	if errPW != nil {
+		t.Fatal(errPW)
+	}
+
+	isValid := hashProof.Verify(proof, pubWitness, vk)
+	//isValid := hashProof.Verify(proof, PublicWitness{pubWitness}, vk)
 	if !isValid {
 		t.Fatal("invalid proof, expected proof to be valid")
 	}

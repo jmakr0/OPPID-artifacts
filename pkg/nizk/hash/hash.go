@@ -2,8 +2,7 @@ package hash
 
 import (
 	"bytes"
-	"crypto/sha256"
-	"fmt"
+	"errors"
 	"github.com/consensys/gnark-crypto/ecc"
 	"github.com/consensys/gnark/backend/groth16"
 	"github.com/consensys/gnark/backend/witness"
@@ -26,7 +25,8 @@ type ProvingKey struct{ key groth16.ProvingKey }
 type VerifyingKey struct{ key groth16.VerifyingKey }
 
 type Witness struct {
-	assignment *Circuit // makes testing easier
+	assignment *Circuit // for testing
+	image      []byte
 	witness    witness.Witness
 }
 type PublicWitness struct{ witness witness.Witness }
@@ -212,63 +212,71 @@ func (pp *PublicParams) KeyGen() (*ProvingKey, *VerifyingKey, error) {
 }
 
 // NewWitness returns a witness for image = H( H(pub || x) || y) with H = sha256, where pub is public and x,y stay secret
-func (pp *PublicParams) NewWitness(x, y, pub []byte) (*Witness, error) {
-	if len(x) > MaxInputLength || len(y) > MaxInputLength || len(pub) > MaxInputLength {
-		return nil, fmt.Errorf("invalid input length, expects at most %d", MaxInputLength)
+func (pp *PublicParams) NewWitness(x, y, pubPreimage, image []byte) (Witness, error) {
+	if len(x) != MaxInputLength || len(y) != MaxInputLength || len(pubPreimage) != MaxInputLength || len(image) != MaxOutputLength {
+		return Witness{}, errors.New("input lengths not correct")
 	}
 
-	// Copy input to arrays with max length
-	var inPubBytes [MaxInputLength]byte
-	copy(inPubBytes[:], pub)
-
-	var inXBytes [MaxInputLength]byte
-	copy(inXBytes[:], x)
-
-	var inYBytes [MaxInputLength]byte
-	copy(inYBytes[:], y)
-
-	// Create hashes
-	innerPreimage := append(inPubBytes[:], inXBytes[:]...)
-	innerHash := sha256.Sum256(innerPreimage)
-
-	preimage := append(innerHash[:], inYBytes[:]...)
-	hash := sha256.Sum256(preimage)
-
-	// Transfer to correct format for circuit
 	var preimagePubU8 [MaxInputLength]uints.U8
 	var xU8 [MaxInputLength]uints.U8
 	var yU8 [MaxInputLength]uints.U8
 	for i := 0; i < MaxInputLength; i++ {
-		preimagePubU8[i] = uints.NewU8(inPubBytes[i])
-		xU8[i] = uints.NewU8(inXBytes[i])
-		yU8[i] = uints.NewU8(inYBytes[i])
+		preimagePubU8[i] = uints.NewU8(pubPreimage[i])
+		xU8[i] = uints.NewU8(x[i])
+		yU8[i] = uints.NewU8(y[i])
 	}
 
-	var imageU8 [OutputLength]uints.U8
-	for i, d := range hash {
+	var imageU8 [MaxOutputLength]uints.U8
+	for i, d := range image {
 		imageU8[i] = uints.NewU8(d)
 	}
 
 	assignment := &Circuit{xU8, yU8, preimagePubU8, imageU8}
 	w, err := frontend.NewWitness(assignment, ecc.BLS12_381.ScalarField())
 	if err != nil {
-		return nil, err
+		return Witness{}, err
 	}
 
-	return &Witness{assignment, w}, nil
+	return Witness{assignment, hash, w}, nil
 }
 
-func (pp *PublicParams) Prove(w *Witness, pk *ProvingKey) (Proof, PublicWitness, error) {
+func (pp *PublicParams) NewPublicWitness(pubPreimage, image []byte) (PublicWitness, error) {
+	if len(pubPreimage) > MaxInputLength || len(image) > MaxInputLength {
+		return PublicWitness{}, errors.New("invalid input length")
+	}
+	// Just empty data to build the circuit
+	var xU8 [MaxInputLength]uints.U8
+	var yU8 [MaxInputLength]uints.U8
+
+	var inPubBytes [MaxInputLength]byte
+	copy(inPubBytes[:], pubPreimage)
+	var preimagePubU8 [MaxInputLength]uints.U8
+	for i := 0; i < MaxInputLength; i++ {
+		preimagePubU8[i] = uints.NewU8(inPubBytes[i])
+	}
+	var imageU8 [MaxOutputLength]uints.U8
+	for i := 0; i < MaxOutputLength; i++ {
+		imageU8[i] = uints.NewU8(image[i])
+	}
+	assignment := &Circuit{xU8, yU8, preimagePubU8, imageU8}
+	w, err := frontend.NewWitness(assignment, ecc.BLS12_381.ScalarField(), frontend.PublicOnly())
+	if err != nil {
+		return PublicWitness{}, err
+	}
+	//pubWitness, err := w.Public()
+	//if err != nil {
+	//	return PublicWitness{}, err
+	//}
+
+	return PublicWitness{w}, nil
+}
+
+func (pp *PublicParams) Prove(w Witness, pk *ProvingKey) (Proof, error) {
 	proof, err := groth16.Prove(pp.cs, pk.key, w.witness)
 	if err != nil {
-		return Proof{}, PublicWitness{}, err
+		return Proof{}, err
 	}
-	pubWitness, err := w.witness.Public()
-	if err != nil {
-		return Proof{}, PublicWitness{}, err
-	}
-
-	return Proof{proof}, PublicWitness{pubWitness}, nil
+	return Proof{proof}, nil
 }
 
 func (pp *PublicParams) Verify(p Proof, pw PublicWitness, vk *VerifyingKey) bool {
