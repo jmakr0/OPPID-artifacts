@@ -43,7 +43,7 @@ type PairwiseSub = []byte
 type MaskedSub = [NIZK.MaxOutputLength]byte
 
 type ClientIDBinding struct {
-	id   ClientId
+	Id   ClientId
 	name ClientName
 	ruri RedirectUri
 	sig  RSA.Signature
@@ -109,7 +109,7 @@ func (pp *PublicParams) Register(k *PrivateKey, name ClientName, ruri RedirectUr
 	buf.Write(ruri)
 
 	var bin ClientIDBinding
-	bin.id = id[:]
+	bin.Id = id[:]
 	bin.name = name
 	bin.ruri = ruri
 	bin.sig = pp.rsa.Sign(k.rsaSk, buf.Bytes())
@@ -121,7 +121,7 @@ func (pp *PublicParams) Register(k *PrivateKey, name ClientName, ruri RedirectUr
 func (pp *PublicParams) Init(ipk *PublicKey, uid UserId, cert ClientIDBinding, rpNonce Nonce) (Request, UserRPState, error) {
 	var buf bytes.Buffer
 	buf.Write([]byte(dstStr + "CERT"))
-	buf.Write(cert.id)
+	buf.Write(cert.Id)
 	buf.Write(cert.name)
 	buf.Write(cert.ruri)
 
@@ -137,12 +137,12 @@ func (pp *PublicParams) Init(ipk *PublicKey, uid UserId, cert ClientIDBinding, r
 	_, _ = rand.Read(uNonce2[:])
 
 	hash := sha256.New()
-	hash.Write(cert.id)
+	hash.Write(cert.Id)
 	hash.Write(rpNonce[:])
 	hash.Write(uNonce1[:])
 	maskedAud := hash.Sum(nil)
 
-	circuitCidBytes, circuitNonce2Bytes, circuitUidBytes, circuitMaskedSub, err := NIZK.BuildCircuitInputs(cert.id, uNonce2[:], uid)
+	circuitCidBytes, circuitNonce2Bytes, circuitUidBytes, circuitMaskedSub, err := NIZK.BuildCircuitInputs(cert.Id, uNonce2[:], uid)
 	if err != nil {
 		return Request{}, UserRPState{}, err
 	}

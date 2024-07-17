@@ -58,20 +58,18 @@ type FinalizedToken struct {
 }
 
 func tokenBytes(com *PC.Commitment, uid, ctx, sid []byte) []byte {
-	var tkBuf bytes.Buffer
-
-	tkBuf.Write(com.Element.Bytes())
-	tkBuf.Write(uid)
-	tkBuf.Write(ctx)
-	tkBuf.Write(sid)
-
-	return tkBuf.Bytes()
+	var buf bytes.Buffer
+	buf.Write(com.Element.Bytes())
+	buf.Write(uid)
+	buf.Write(ctx)
+	buf.Write(sid)
+	return buf.Bytes()
 }
 
 func Setup() *PublicParams {
 	rsa := RSA.Setup(2048)
 
-	dst := []byte(dstStr + "COM_SIG") // Commitments & signatures must hash to the same domain (dst) for the (NIZK) proof
+	dst := []byte(dstStr + "COM_SIG") // Commitments & signatures hash to the same domain (dst) for the (NIZK) proof
 	pc := PC.Setup(dst)
 	ps := PS.Setup(dst)
 
@@ -85,9 +83,7 @@ func (pp *PublicParams) KeyGen() (*PrivateKey, *PublicKey) {
 }
 
 func (pp *PublicParams) Register(k *PrivateKey, rid []byte) Credential {
-	var cred Credential
-	cred.sig = pp.ps.Sign(k.psSk, rid)
-	return cred
+	return Credential{pp.ps.Sign(k.psSk, rid)}
 }
 
 func (pp *PublicParams) Init(rid []byte) (UsrOpening, UsrCommitment) {

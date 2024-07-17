@@ -32,7 +32,7 @@ func TestRegister(t *testing.T) {
 	id := []byte("test-id")
 	enPt := []byte("endpoint")
 	cert := uppresso.Register(isk, id, enPt)
-	if cert.idRP == nil {
+	if cert.Id == nil {
 		t.Fatal("Register did not generate a valid idRP")
 	}
 	if cert.sig == nil {
@@ -63,7 +63,7 @@ func TestRequest(t *testing.T) {
 	enPt := []byte("endpoint")
 	cert := uppresso.Register(sk, id, enPt)
 	_, r, _ := uppresso.Init(pk, &cert)
-	pidRP := uppresso.Request(cert.idRP, r)
+	pidRP := uppresso.Request(cert.Id, r)
 	if pidRP == nil {
 		t.Fatal("Request did not generate a valid PidRP")
 	}
@@ -95,13 +95,13 @@ func TestVerify(t *testing.T) {
 	enPt := []byte("endpoint")
 	cert := uppresso.Register(sk, id, enPt)
 	pidRP, r, _ := uppresso.Init(pk, &cert)
-	rpPidRP := uppresso.Request(cert.idRP, r)
+	rpPidRP := uppresso.Request(cert.Id, r)
 	idU := utils.GenerateRandomScalar()
 	ctx := []byte("context")
 	sid := []byte("session-id")
 	token := uppresso.Response(sk, pidRP, idU, ctx, sid)
 	acct := uppresso.Verify(pk, rpPidRP, r, ctx, sid, token)
 	if acct == nil {
-		t.Fatal("Verify did not generate a valid account")
+		t.Fatal("Verify failed")
 	}
 }

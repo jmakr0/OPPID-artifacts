@@ -81,7 +81,7 @@ func TestVerify(t *testing.T) {
 
 	tk, _ := ppoidc.Response(isk, uid, req, ctx, sid)
 
-	isValid := ppoidc.Verify(ipk, cert.id, st, tk)
+	isValid := ppoidc.Verify(ipk, cert.Id, st, tk)
 	if !isValid {
 		t.Fatalf("Verify returned false for a valid token")
 	}

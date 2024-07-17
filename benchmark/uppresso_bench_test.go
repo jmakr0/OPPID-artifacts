@@ -1,14 +1,15 @@
-package uppresso
+package benchmark
 
 import (
 	"OPPID/pkg/utils"
+	UPPRESSO "OPPID/protocol/uppresso"
 	GG "github.com/cloudflare/circl/ecc/bls12381"
 	"testing"
 	"time"
 )
 
-func setupBenchmark() (*PublicParams, *GG.Scalar, []byte, []byte, *PrivateKey, *PublicKey, CertRP) {
-	uppresso := Setup()
+func setupUPPRESSOBenchmark() (*UPPRESSO.PublicParams, *GG.Scalar, []byte, []byte, *UPPRESSO.PrivateKey, *UPPRESSO.PublicKey, UPPRESSO.CertRP) {
+	uppresso := UPPRESSO.Setup()
 	isk, ipk := uppresso.KeyGen()
 
 	id := []byte("test-RP")
@@ -23,8 +24,8 @@ func setupBenchmark() (*PublicParams, *GG.Scalar, []byte, []byte, *PrivateKey, *
 	return uppresso, idU, ctx, sid, isk, ipk, cert
 }
 
-func BenchmarkInit(b *testing.B) {
-	uppresso, _, _, _, _, ipk, cert := setupBenchmark()
+func BenchmarkUPPRESSOInit(b *testing.B) {
+	uppresso, _, _, _, _, ipk, cert := setupUPPRESSOBenchmark()
 	start := time.Now()
 	for i := 0; i < b.N; i++ {
 		_, _, err := uppresso.Init(ipk, &cert)
@@ -36,20 +37,20 @@ func BenchmarkInit(b *testing.B) {
 	b.ReportMetric(float64(elapsed.Milliseconds())/float64(b.N), "ms/op")
 }
 
-func BenchmarkRequest(b *testing.B) {
-	uppresso, _, _, _, _, ipk, cert := setupBenchmark()
+func BenchmarkUPPRESSORequest(b *testing.B) {
+	uppresso, _, _, _, _, ipk, cert := setupUPPRESSOBenchmark()
 	_, t, _ := uppresso.Init(ipk, &cert)
 
 	start := time.Now()
 	for i := 0; i < b.N; i++ {
-		uppresso.Request(cert.idRP, t)
+		uppresso.Request(cert.Id, t)
 	}
 	elapsed := time.Since(start)
 	b.ReportMetric(float64(elapsed.Milliseconds())/float64(b.N), "ms/op")
 }
 
-func BenchmarkResponse(b *testing.B) {
-	uppresso, idU, ctx, sid, isk, ipk, cert := setupBenchmark()
+func BenchmarkUPPRESSOResponse(b *testing.B) {
+	uppresso, idU, ctx, sid, isk, ipk, cert := setupUPPRESSOBenchmark()
 	uPidRP, _, _ := uppresso.Init(ipk, &cert)
 
 	start := time.Now()
@@ -60,11 +61,11 @@ func BenchmarkResponse(b *testing.B) {
 	b.ReportMetric(float64(elapsed.Milliseconds())/float64(b.N), "ms/op")
 }
 
-func BenchmarkVerify(b *testing.B) {
-	uppresso, idU, ctx, sid, isk, ipk, cert := setupBenchmark()
+func BenchmarkUPPRESSOVerify(b *testing.B) {
+	uppresso, idU, ctx, sid, isk, ipk, cert := setupUPPRESSOBenchmark()
 
 	uPidRP, t, _ := uppresso.Init(ipk, &cert)
-	rpPidRP := uppresso.Request(cert.idRP, t)
+	rpPidRP := uppresso.Request(cert.Id, t)
 	token := uppresso.Response(isk, uPidRP, idU, ctx, sid)
 
 	start := time.Now()

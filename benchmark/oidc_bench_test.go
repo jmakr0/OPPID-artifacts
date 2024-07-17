@@ -1,12 +1,13 @@
-package oidc
+package benchmark
 
 import (
+	OIDC "OPPID/protocol/oidc"
 	"testing"
 	"time"
 )
 
-func setupBenchmark() (*PublicParams, []byte, []byte, []byte, []byte, *PrivateKey, *PublicKey) {
-	oidc := Setup()
+func setupOIDCBenchmark() (*OIDC.PublicParams, []byte, []byte, []byte, []byte, *OIDC.PrivateKey, *OIDC.PublicKey) {
+	oidc := OIDC.Setup()
 	isk, ipk := oidc.KeyGen()
 
 	rid := []byte("Test-RID")
@@ -18,7 +19,7 @@ func setupBenchmark() (*PublicParams, []byte, []byte, []byte, []byte, *PrivateKe
 }
 
 func BenchmarkOIDCResponse(b *testing.B) {
-	oidc, rid, uid, ctx, sid, isk, _ := setupBenchmark()
+	oidc, rid, uid, ctx, sid, isk, _ := setupOIDCBenchmark()
 	b.ResetTimer()
 	start := time.Now()
 	for i := 0; i < b.N; i++ {
@@ -29,14 +30,14 @@ func BenchmarkOIDCResponse(b *testing.B) {
 }
 
 func BenchmarkOIDCVerify(b *testing.B) {
-	oidc, rid, uid, ctx, sid, isk, ipk := setupBenchmark()
+	oidc, rid, uid, ctx, sid, isk, ipk := setupOIDCBenchmark()
 
 	tk := oidc.Response(isk, rid, uid, ctx, sid)
 
 	b.ResetTimer()
 	start := time.Now()
 	for i := 0; i < b.N; i++ {
-		isValid := oidc.Verify(ipk, rid, tk.ppid, ctx, sid, tk)
+		isValid := oidc.Verify(ipk, rid, ctx, sid, tk)
 		if !isValid {
 			b.Fatalf("failed to verify response")
 		}

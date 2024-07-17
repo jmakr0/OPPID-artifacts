@@ -64,9 +64,8 @@ type FinalizedToken struct {
 	sig     RSA.Signature
 }
 
-type PairwisePseudonymousIdentifier = []byte
+type PPID = []byte
 
-// tokenBytes generates a byte representation of the token
 func tokenBytes(com *PC.Commitment, bx, by *GG.G1, ctx, sid []byte) []byte {
 	tkBuf := bytes.NewBuffer(nil)
 	tkBuf.Write(com.Element.Bytes())
@@ -86,7 +85,7 @@ func hashToPoint(input []byte, dst []byte) *GG.G1 {
 
 // createAuxBuffer creates an auxiliary buffer for proof inputs
 func createAuxBuffer(bx *GG.G1, sid []byte) []byte {
-	aux := bytes.NewBuffer(nil)
+	var aux bytes.Buffer
 	aux.Write(bx.Bytes())
 	aux.Write(sid)
 	return aux.Bytes()
@@ -94,11 +93,7 @@ func createAuxBuffer(bx *GG.G1, sid []byte) []byte {
 
 // createPublicInputs creates the public inputs for NIZK proof verification
 func createPublicInputs(pc *PC.PublicParams, ps *PS.PublicKey, com *PC.Commitment) NIZK.PublicInputs {
-	return NIZK.PublicInputs{
-		PC:  pc,
-		PS:  ps,
-		Com: com,
-	}
+	return NIZK.PublicInputs{ps, pc, com}
 }
 
 func Setup() *PublicParams {
@@ -117,7 +112,7 @@ func (pp *PublicParams) KeyGen() (*PrivateKey, *PublicKey) {
 }
 
 func (pp *PublicParams) Register(k *PrivateKey, rid []byte) Credential {
-	return Credential{sig: pp.ps.Sign(k.psSk, rid)}
+	return Credential{pp.ps.Sign(k.psSk, rid)}
 }
 
 func (pp *PublicParams) Init(rid []byte) (UsrOpening, UsrCommitment) {
@@ -162,7 +157,7 @@ func (pp *PublicParams) Response(isk *PrivateKey, auth Auth, crid UsrCommitment,
 	return Token{sig, by}, nil
 }
 
-func (pp *PublicParams) Finalize(ipk *PublicKey, rid, ctx, sid []byte, crid UsrCommitment, orid UsrOpening, tk Token) (FinalizedToken, PairwisePseudonymousIdentifier, error) {
+func (pp *PublicParams) Finalize(ipk *PublicKey, rid, ctx, sid []byte, crid UsrCommitment, orid UsrOpening, tk Token) (FinalizedToken, PPID, error) {
 	bx := utils.GenerateG1Point(orid.b, hashToPoint(rid, []byte(dstStr)))
 	tkBytes := tokenBytes(&crid.com, bx, tk.by, ctx, sid)
 

@@ -1,32 +1,33 @@
-package ppoidc
+package benchmark
 
 import (
+	PPOIDC "OPPID/protocol/ppoidc"
 	"crypto/rand"
 	"testing"
 	"time"
 )
 
-func setupBenchmark(b *testing.B) (*PublicParams, *PrivateKey, *PublicKey, UserId, ClientIDBinding, Nonce) {
-	ppoidc, err := Setup()
+func setupPPOIDCBenchmark(b *testing.B) (*PPOIDC.PublicParams, *PPOIDC.PrivateKey, *PPOIDC.PublicKey, PPOIDC.UserId, PPOIDC.ClientIDBinding, PPOIDC.Nonce) {
+	ppoidc, err := PPOIDC.Setup()
 	if err != nil {
 		b.Fatal(err)
 	}
 	isk, ipk := ppoidc.KeyGen()
 
-	uid := UserId("Test ID")
-	name := ClientName("Test ID")
-	ruri := RedirectUri("Test redirect URI")
+	uid := PPOIDC.UserId("Test ID")
+	name := PPOIDC.ClientName("Test ID")
+	ruri := PPOIDC.RedirectUri("Test redirect URI")
 
 	cert := ppoidc.Register(isk, name, ruri)
 
-	var nonceRP Nonce
+	var nonceRP PPOIDC.Nonce
 	_, _ = rand.Read(nonceRP[:])
 
 	return ppoidc, isk, ipk, uid, cert, nonceRP
 }
 
 func BenchmarkInit(b *testing.B) {
-	ppoidc, _, ipk, uid, cert, nonceRP := setupBenchmark(b)
+	ppoidc, _, ipk, uid, cert, nonceRP := setupPPOIDCBenchmark(b)
 	b.ResetTimer()
 	start := time.Now()
 	for i := 0; i < b.N; i++ {
@@ -40,7 +41,7 @@ func BenchmarkInit(b *testing.B) {
 }
 
 func BenchmarkResponse(b *testing.B) {
-	ppoidc, isk, ipk, uid, cert, nonceRP := setupBenchmark(b)
+	ppoidc, isk, ipk, uid, cert, nonceRP := setupPPOIDCBenchmark(b)
 
 	ctx := []byte("context")
 	sid := []byte("sessionID")
@@ -60,7 +61,7 @@ func BenchmarkResponse(b *testing.B) {
 }
 
 func BenchmarkVerify(b *testing.B) {
-	ppoidc, isk, ipk, uid, cert, nonceRP := setupBenchmark(b)
+	ppoidc, isk, ipk, uid, cert, nonceRP := setupPPOIDCBenchmark(b)
 
 	ctx := []byte("context")
 	sid := []byte("sessionID")
@@ -71,7 +72,7 @@ func BenchmarkVerify(b *testing.B) {
 	b.ResetTimer()
 	start := time.Now()
 	for i := 0; i < b.N; i++ {
-		isValid := ppoidc.Verify(ipk, cert.id, st, tk)
+		isValid := ppoidc.Verify(ipk, cert.Id, st, tk)
 		if !isValid {
 			b.Fatalf("Verify returned false for a valid token")
 		}

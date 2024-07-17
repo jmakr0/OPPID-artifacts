@@ -2,7 +2,7 @@ package comsig
 
 import (
 	PC "OPPID/pkg/commit/pc"
-	NIZK_PS "OPPID/pkg/nizk/sig"
+	NIZKPS "OPPID/pkg/nizk/sig"
 	PS "OPPID/pkg/sign/ps"
 	"OPPID/pkg/utils"
 	"bytes"
@@ -54,7 +54,7 @@ func Prove(w Witnesses, p PublicInputs, aux []byte, dst []byte) Proof {
 	u2 := utils.GenerateRandomScalar() // for commitment
 	u3 := utils.GenerateRandomScalar() // for signature
 
-	t, randSig := NIZK_PS.Randomize(w.Sig)
+	t, randSig := NIZKPS.Randomize(w.Sig)
 
 	var pi Proof
 	pi.sig = randSig

@@ -1,12 +1,13 @@
-package oppid
+package benchmark
 
 import (
+	OPPID "OPPID/protocol/oppid"
 	"testing"
 	"time"
 )
 
-func setupBenchmark() (*PublicParams, []byte, []byte, []byte, []byte, *PrivateKey, *PublicKey, Credential, UsrOpening, UsrCommitment, Auth, Token, FinalizedToken, PairwisePseudonymousIdentifier) {
-	oppid := Setup()
+func setupOPPIDBenchmark() (*OPPID.PublicParams, []byte, []byte, []byte, []byte, *OPPID.PrivateKey, *OPPID.PublicKey, OPPID.Credential, OPPID.UsrOpening, OPPID.UsrCommitment, OPPID.Auth, OPPID.Token, OPPID.FinalizedToken, OPPID.PPID) {
+	oppid := OPPID.Setup()
 	isk, ipk := oppid.KeyGen()
 
 	rid := []byte("Test-RID")
@@ -24,7 +25,7 @@ func setupBenchmark() (*PublicParams, []byte, []byte, []byte, []byte, *PrivateKe
 }
 
 func BenchmarkOPPIDRegister(b *testing.B) {
-	oppid, rid, _, _, _, isk, _, _, _, _, _, _, _, _ := setupBenchmark()
+	oppid, rid, _, _, _, isk, _, _, _, _, _, _, _, _ := setupOPPIDBenchmark()
 	b.ResetTimer()
 	start := time.Now()
 	for i := 0; i < b.N; i++ {
@@ -35,7 +36,7 @@ func BenchmarkOPPIDRegister(b *testing.B) {
 }
 
 func BenchmarkOPPIDInit(b *testing.B) {
-	oppid, rid, _, _, _, _, _, _, _, _, _, _, _, _ := setupBenchmark()
+	oppid, rid, _, _, _, _, _, _, _, _, _, _, _, _ := setupOPPIDBenchmark()
 	b.ResetTimer()
 	start := time.Now()
 	for i := 0; i < b.N; i++ {
@@ -46,7 +47,7 @@ func BenchmarkOPPIDInit(b *testing.B) {
 }
 
 func BenchmarkOPPIDRequest(b *testing.B) {
-	oppid, rid, _, _, sid, _, ipk, cred, orid, crid, _, _, _, _ := setupBenchmark()
+	oppid, rid, _, _, sid, _, ipk, cred, orid, crid, _, _, _, _ := setupOPPIDBenchmark()
 	b.ResetTimer()
 	start := time.Now()
 	for i := 0; i < b.N; i++ {
@@ -60,7 +61,7 @@ func BenchmarkOPPIDRequest(b *testing.B) {
 }
 
 func BenchmarkOPPIDResponse(b *testing.B) {
-	oppid, _, uid, ctx, sid, isk, _, _, _, crid, auth, _, _, _ := setupBenchmark()
+	oppid, _, uid, ctx, sid, isk, _, _, _, crid, auth, _, _, _ := setupOPPIDBenchmark()
 	b.ResetTimer()
 	start := time.Now()
 	for i := 0; i < b.N; i++ {
@@ -74,7 +75,7 @@ func BenchmarkOPPIDResponse(b *testing.B) {
 }
 
 func BenchmarkOPPIDFinalize(b *testing.B) {
-	oppid, rid, _, ctx, sid, _, ipk, _, orid, crid, _, tk, _, _ := setupBenchmark()
+	oppid, rid, _, ctx, sid, _, ipk, _, orid, crid, _, tk, _, _ := setupOPPIDBenchmark()
 	b.ResetTimer()
 	start := time.Now()
 	for i := 0; i < b.N; i++ {
@@ -88,7 +89,7 @@ func BenchmarkOPPIDFinalize(b *testing.B) {
 }
 
 func BenchmarkOPPIDVerify(b *testing.B) {
-	oppid, rid, _, ctx, sid, _, ipk, _, _, _, _, _, ftk, ppid := setupBenchmark()
+	oppid, rid, _, ctx, sid, _, ipk, _, _, _, _, _, ftk, ppid := setupOPPIDBenchmark()
 	b.ResetTimer()
 	start := time.Now()
 	for i := 0; i < b.N; i++ {

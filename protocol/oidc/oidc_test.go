@@ -15,7 +15,7 @@ func TestOIDCResponseAndVerify(t *testing.T) {
 
 	tk := oidc.Response(isk, rid, uid, ctx, sid)
 
-	isValid := oidc.Verify(ipk, rid, tk.ppid, ctx, sid, tk)
+	isValid := oidc.Verify(ipk, rid, ctx, sid, tk)
 	if !isValid {
 		t.Fatalf("Token is not valid")
 	}
@@ -35,7 +35,7 @@ func TestOIDCResponseAndVerifyInvalidInputs(t *testing.T) {
 	// Modify one byte of the sign to simulate an invalid sign
 	tk.sig[0] ^= 0xFF
 
-	isValid := oidc.Verify(ipk, rid, tk.ppid, ctx, sid, tk)
+	isValid := oidc.Verify(ipk, rid, ctx, sid, tk)
 	if isValid {
 		t.Fatalf("Expected verification to fail for tampered sign")
 	}

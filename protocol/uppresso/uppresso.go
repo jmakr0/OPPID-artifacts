@@ -29,7 +29,7 @@ type PrivateKey struct {
 }
 
 type IdRP = GG.G1
-type EnPtRP = []byte // simulates fictional RP endpoint
+type EnPtRP = []byte // fictional RP endpoint
 
 type IdU = GG.Scalar
 
@@ -38,9 +38,9 @@ type PidU = GG.G1
 
 type Acct = GG.G1 // corresponds to a ppid
 
-// RP certificates from the paper do not include any key references
+// Certificates from the paper do not include any key references
 type CertRP struct {
-	idRP   *IdRP
+	Id     *IdRP
 	enPtRP EnPtRP
 	sig    RSA.Signature
 }
@@ -85,7 +85,7 @@ func (pp *PublicParams) Register(k *PrivateKey, id []byte, enPt EnPtRP) CertRP {
 func (pp *PublicParams) Init(ipk *PublicKey, cert *CertRP) (*PidRP, *GG.Scalar, error) {
 	var buf bytes.Buffer
 	buf.Write([]byte(dstStr + "CERT"))
-	buf.Write(cert.idRP.Bytes())
+	buf.Write(cert.Id.Bytes())
 	buf.Write(cert.enPtRP)
 
 	isValid := pp.rsa.Verify(ipk.rsaPk, buf.Bytes(), cert.sig)
@@ -94,7 +94,7 @@ func (pp *PublicParams) Init(ipk *PublicKey, cert *CertRP) (*PidRP, *GG.Scalar, 
 	}
 
 	t := utils.GenerateRandomScalar()
-	pidRP := utils.GenerateG1Point(t, cert.idRP)
+	pidRP := utils.GenerateG1Point(t, cert.Id)
 
 	return pidRP, t, nil
 }

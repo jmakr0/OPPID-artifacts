@@ -1,12 +1,13 @@
-package aifzkp
+package benchmark
 
 import (
+	"OPPID/protocol/aifzkp"
 	"testing"
 	"time"
 )
 
-func setupBenchmark() (*PublicParams, []byte, []byte, []byte, []byte, *PrivateKey, *PublicKey, Credential, UsrOpening, UsrCommitment) {
-	aifZkp := Setup()
+func setupAIFZkPBenchmark() (*aifzkp.PublicParams, []byte, []byte, []byte, []byte, *aifzkp.PrivateKey, *aifzkp.PublicKey, aifzkp.Credential, aifzkp.UsrOpening, aifzkp.UsrCommitment) {
+	aifZkp := aifzkp.Setup()
 	isk, ipk := aifZkp.KeyGen()
 
 	rid := []byte("Test-RID")
@@ -22,7 +23,7 @@ func setupBenchmark() (*PublicParams, []byte, []byte, []byte, []byte, *PrivateKe
 }
 
 func BenchmarkAIFZKPRegister(b *testing.B) {
-	aifZkp, rid, _, _, _, isk, _, _, _, _ := setupBenchmark()
+	aifZkp, rid, _, _, _, isk, _, _, _, _ := setupAIFZkPBenchmark()
 	b.ResetTimer()
 	start := time.Now()
 	for i := 0; i < b.N; i++ {
@@ -33,7 +34,7 @@ func BenchmarkAIFZKPRegister(b *testing.B) {
 }
 
 func BenchmarkAIFZKPInit(b *testing.B) {
-	aifZkp, rid, _, _, _, _, _, _, _, _ := setupBenchmark()
+	aifZkp, rid, _, _, _, _, _, _, _, _ := setupAIFZkPBenchmark()
 	b.ResetTimer()
 	start := time.Now()
 	for i := 0; i < b.N; i++ {
@@ -44,7 +45,7 @@ func BenchmarkAIFZKPInit(b *testing.B) {
 }
 
 func BenchmarkAIFZKPRequest(b *testing.B) {
-	aifZkp, rid, _, _, sid, _, ipk, cred, orid, crid := setupBenchmark()
+	aifZkp, rid, _, _, sid, _, ipk, cred, orid, crid := setupAIFZkPBenchmark()
 	b.ResetTimer()
 	start := time.Now()
 	for i := 0; i < b.N; i++ {
@@ -55,7 +56,7 @@ func BenchmarkAIFZKPRequest(b *testing.B) {
 }
 
 func BenchmarkAIFZKPResponse(b *testing.B) {
-	aifZkp, rid, uid, ctx, sid, isk, ipk, cred, orid, crid := setupBenchmark()
+	aifZkp, rid, uid, ctx, sid, isk, ipk, cred, orid, crid := setupAIFZkPBenchmark()
 	auth := aifZkp.Request(ipk, rid, cred, crid, orid, sid)
 	b.ResetTimer()
 	start := time.Now()
@@ -70,7 +71,7 @@ func BenchmarkAIFZKPResponse(b *testing.B) {
 }
 
 func BenchmarkAIFZKPFinalize(b *testing.B) {
-	aifZkp, rid, uid, ctx, sid, isk, ipk, cred, orid, crid := setupBenchmark()
+	aifZkp, rid, uid, ctx, sid, isk, ipk, cred, orid, crid := setupAIFZkPBenchmark()
 
 	auth := aifZkp.Request(ipk, rid, cred, crid, orid, sid)
 	tk, _ := aifZkp.Response(isk, auth, crid, uid, ctx, sid)
@@ -88,7 +89,7 @@ func BenchmarkAIFZKPFinalize(b *testing.B) {
 }
 
 func BenchmarkAIFZKPVerify(b *testing.B) {
-	aifZkp, rid, uid, ctx, sid, isk, ipk, cred, orid, crid := setupBenchmark()
+	aifZkp, rid, uid, ctx, sid, isk, ipk, cred, orid, crid := setupAIFZkPBenchmark()
 
 	auth := aifZkp.Request(ipk, rid, cred, crid, orid, sid)
 	tk, _ := aifZkp.Response(isk, auth, crid, uid, ctx, sid)
