@@ -10,7 +10,6 @@ func BenchmarkPCCommit(b *testing.B) {
 	msg := []byte("test message")
 
 	b.ResetTimer()
-	// Run the benchmark
 	start := time.Now()
 	for i := 0; i < b.N; i++ {
 		pc.Commit(msg)
@@ -26,7 +25,6 @@ func BenchmarkPCOpen(b *testing.B) {
 	c, o := pc.Commit(msg)
 
 	b.ResetTimer()
-	// Run the benchmark
 	start := time.Now()
 	for i := 0; i < b.N; i++ {
 		isValid := pc.Open(msg, c, o)

@@ -47,7 +47,7 @@ func Randomize(sig *PS.Signature) (*GG.Scalar, *PS.Signature) {
 	return t, rndSig // (sig1^r, (sig2 * sig1^BldValue)^r)
 }
 
-func New(p PublicInput, w Witness) Proof {
+func Prove(p PublicInput, w Witness) Proof {
 	u1 := utils.GenerateRandomScalar()
 	u2 := utils.GenerateRandomScalar()
 	t, rndSig := Randomize(w.sig)
@@ -85,7 +85,7 @@ func New(p PublicInput, w Witness) Proof {
 	return pi
 }
 
-func Verify(p *PublicInput, pi *Proof) bool {
+func Verify(p PublicInput, pi Proof) bool {
 	var buff bytes.Buffer
 
 	a1Bytes, _ := pi.a1.MarshalBinary()

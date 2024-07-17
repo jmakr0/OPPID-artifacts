@@ -6,13 +6,13 @@ import (
 )
 
 func TestNewVerify(t *testing.T) {
-	pc := PC.Setup("")
+	pc := PC.Setup(nil)
 
 	msg := []byte("test")
-	commit, o := pc.Commit(msg)
+	com, opn := pc.Commit(msg)
 
-	p := &PublicInput{params: pc, com: commit}
-	w := &Witness{msg: msg, opening: o}
+	p := &PublicInput{pc, &com}
+	w := &Witness{msg, &opn}
 
 	pi := Prove(p, w)
 

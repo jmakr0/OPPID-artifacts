@@ -5,19 +5,46 @@ import (
 	"testing"
 )
 
-func TestNewVerify(t *testing.T) {
-	ps := PS.KeyGen("")
+func TestRandomizeSignature(t *testing.T) {
+	ps := PS.Setup(nil)
+	sk, _ := ps.KeyGen()
+
+	sig := ps.Sign(sk, []byte("Test"))
+
+	_, randSig := Randomize(&sig)
+
+	if randSig.One == nil {
+		t.Error("randomized signature One is nil")
+	}
+
+	if randSig.Two == nil {
+		t.Error("randomized signature Two is nil")
+	}
+
+	// Ensure that randomization has altered the signature
+	if sig.One.IsEqual(randSig.One) {
+		t.Error("randomization did not change sig1")
+	}
+
+	if sig.Two.IsEqual(randSig.Two) {
+		t.Error("randomization did not change sig2")
+	}
+}
+
+func TestProveVerify(t *testing.T) {
+	ps := PS.Setup(nil)
+	sk, pk := ps.KeyGen()
 	msg := []byte("test")
 
-	sig := ps.Sign(msg)
+	sig := ps.Sign(sk, msg)
 
-	p := &PublicInput{psPk: ps}
-	w := &Witness{msg: msg, sig: sig}
+	pubInput := PublicInput{ps, pk}
+	witness := Witness{msg, &sig}
 
-	pi := New(p, w)
+	proof := Prove(pubInput, witness)
 
-	isValid := Verify(p, pi)
+	isValid := Verify(pubInput, proof)
 	if !isValid {
-		t.Errorf("Verify(%v, %v) returned %v", p, pi, isValid)
+		t.Errorf("Verify(%v, %v) returned %v", pubInput, proof, isValid)
 	}
 }

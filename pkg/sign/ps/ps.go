@@ -65,7 +65,6 @@ func (pp *PublicParams) Sign(k *PrivateKey, msg []byte) Signature {
 	return sig
 }
 
-// Verify checks the validity of the given signature for the message.
 func (pp *PublicParams) Verify(pk *PublicKey, msg []byte, sig Signature) bool {
 	if !sig.One.IsOnG1() || sig.One.IsIdentity() {
 		log.Fatalf("Error verifying psPk signature: sigma one not on G1 curve or is identity")

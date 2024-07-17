@@ -108,8 +108,8 @@ func BenchmarkAddG2Point(b *testing.B) {
 }
 
 func BenchmarkPairing(b *testing.B) {
-	g1 := GG.G1Generator()
-	g2 := GG.G2Generator()
+	g1 := GenerateG1Point(GenerateRandomScalar(), GG.G1Generator())
+	g2 := GenerateG2Point(GenerateRandomScalar(), GG.G2Generator())
 
 	b.ResetTimer()
 	start := time.Now()

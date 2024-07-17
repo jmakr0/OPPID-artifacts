@@ -1,15 +1,17 @@
 package fk
 
-import "testing"
+import (
+	"testing"
+)
 
-func TestFK_Eval(t *testing.T) {
-	fk := KeyGen()
+func TestFKEval(t *testing.T) {
+	key := KeyGen()
 
-	msg := []byte("Inner test message")
-	k := []byte("Outer test message")
+	msg1 := []byte("Inner test message")
+	msg2 := []byte("Outer test message")
 
-	y := fk.Eval(msg, k)
+	y := Eval(key, msg1, msg2)
 	if y.IsIdentity() || !y.IsOnG1() {
-		t.Fatalf("hmacPRF output is invalid")
+		t.Fatalf("output is invalid")
 	}
 }

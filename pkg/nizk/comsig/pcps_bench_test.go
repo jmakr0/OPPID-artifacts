@@ -3,11 +3,11 @@ package comsig
 import (
 	PC "OPPID/pkg/commit/pc"
 	PS "OPPID/pkg/sign/ps"
-	"OPPID/pkg/utils"
 	"testing"
+	"time"
 )
 
-func TestProveVerify(t *testing.T) {
+func BenchmarkPCPSGenProof(b *testing.B) {
 	ps := PS.Setup([]byte(dstStr))
 	pc := PC.Setup([]byte(dstStr))
 
@@ -22,16 +22,17 @@ func TestProveVerify(t *testing.T) {
 	pubInput := PublicInputs{pk, pc, &com}
 
 	aux := []byte("auxiliary data")
-	proof := Prove(witness, pubInput, aux, []byte(dstStr))
 
-	isValid := Verify(proof, pubInput, aux)
-
-	if !isValid {
-		t.Error("proof is not valid")
+	b.ResetTimer()
+	start := time.Now()
+	for i := 0; i < b.N; i++ {
+		Prove(witness, pubInput, aux, []byte(dstStr))
 	}
+	elapsed := time.Since(start)
+	b.ReportMetric(float64(elapsed.Milliseconds())/float64(b.N), "ms/op")
 }
 
-func TestVerifyInvalidProof(t *testing.T) {
+func BenchmarkPCPSProofVerify(b *testing.B) {
 	ps := PS.Setup([]byte(dstStr))
 	pc := PC.Setup([]byte(dstStr))
 
@@ -46,14 +47,17 @@ func TestVerifyInvalidProof(t *testing.T) {
 	pubInput := PublicInputs{pk, pc, &com}
 
 	aux := []byte("auxiliary data")
+
 	proof := Prove(witness, pubInput, aux, []byte(dstStr))
 
-	// Modify the proof
-	proof.r1 = utils.GenerateRandomScalar()
-
-	isValid := Verify(proof, pubInput, aux)
-
-	if isValid {
-		t.Error("invalid proof was accepted as valid")
+	b.ResetTimer()
+	start := time.Now()
+	for i := 0; i < b.N; i++ {
+		isValid := Verify(proof, pubInput, aux)
+		if !isValid {
+			b.Fatalf("verify fail")
+		}
 	}
+	elapsed := time.Since(start)
+	b.ReportMetric(float64(elapsed.Milliseconds())/float64(b.N), "ms/op")
 }

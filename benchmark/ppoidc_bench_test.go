@@ -26,7 +26,7 @@ func setupPPOIDCBenchmark(b *testing.B) (*PPOIDC.PublicParams, *PPOIDC.PrivateKe
 	return ppoidc, isk, ipk, uid, cert, nonceRP
 }
 
-func BenchmarkInit(b *testing.B) {
+func BenchmarkPPOIDCInit(b *testing.B) {
 	ppoidc, _, ipk, uid, cert, nonceRP := setupPPOIDCBenchmark(b)
 	b.ResetTimer()
 	start := time.Now()
@@ -40,7 +40,7 @@ func BenchmarkInit(b *testing.B) {
 	b.ReportMetric(float64(elapsed.Milliseconds())/float64(b.N), "ms/op")
 }
 
-func BenchmarkResponse(b *testing.B) {
+func BenchmarkPPOIDCResponse(b *testing.B) {
 	ppoidc, isk, ipk, uid, cert, nonceRP := setupPPOIDCBenchmark(b)
 
 	ctx := []byte("context")
@@ -60,7 +60,7 @@ func BenchmarkResponse(b *testing.B) {
 	b.ReportMetric(float64(elapsed.Milliseconds())/float64(b.N), "ms/op")
 }
 
-func BenchmarkVerify(b *testing.B) {
+func BenchmarkPPOIDCVerify(b *testing.B) {
 	ppoidc, isk, ipk, uid, cert, nonceRP := setupPPOIDCBenchmark(b)
 
 	ctx := []byte("context")

@@ -12,7 +12,6 @@ func BenchmarkPSSign(b *testing.B) {
 	msg := []byte("Hello, World!")
 
 	b.ResetTimer()
-	// Run the benchmark
 	start := time.Now()
 	for i := 0; i < b.N; i++ {
 		ps.Sign(sk, msg)
@@ -29,7 +28,6 @@ func BenchmarkPSVerify(b *testing.B) {
 	sig := ps.Sign(sk, msg)
 
 	b.ResetTimer()
-	// Run the benchmark
 	start := time.Now()
 	for i := 0; i < b.N; i++ {
 		isValid := ps.Verify(pk, msg, sig)

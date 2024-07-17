@@ -12,7 +12,6 @@ func BenchmarkRSASign(b *testing.B) {
 	msg := []byte("Hello, World!")
 
 	b.ResetTimer()
-	// Run the benchmark
 	start := time.Now()
 	for i := 0; i < b.N; i++ {
 		rsa.Sign(sk, msg)
@@ -29,7 +28,6 @@ func BenchmarkRSAVerify(b *testing.B) {
 	sig := rsa.Sign(sk, msg)
 
 	b.ResetTimer()
-	// Run the benchmark
 	start := time.Now()
 	for i := 0; i < b.N; i++ {
 		isValid := rsa.Verify(pk, msg, sig)

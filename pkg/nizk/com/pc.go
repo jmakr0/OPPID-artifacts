@@ -46,10 +46,10 @@ func Prove(p *PublicInput, w *Witness) *Proof {
 
 	data := buff.Bytes()
 
-	z := utils.HashToScalar(data, []byte(DST))
+	z := utils.HashToScalar(data, []byte(DST+"Z"))
 
 	// Responses
-	m := utils.HashToScalar(w.msg, []byte(PC.dstStr))
+	m := utils.HashToScalar(w.msg, p.params.Dst)
 
 	mz := utils.MulScalars(&m, &z)
 	s1 := utils.AddScalars(u1, mz)
@@ -70,7 +70,7 @@ func Verify(p *PublicInput, pi *Proof) bool {
 
 	data := buf.Bytes()
 
-	z := utils.HashToScalar(data, []byte(DST))
+	z := utils.HashToScalar(data, []byte(DST+"Z"))
 
 	g := utils.GenerateG1Point(pi.s1, p.params.G)
 	h := utils.GenerateG1Point(pi.s2, p.params.H)
