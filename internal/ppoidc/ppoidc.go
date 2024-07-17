@@ -36,11 +36,11 @@ type UserId = []byte
 type ClientId = []byte
 type ClientName = []byte
 type RedirectUri = []byte
-type Nonce = []byte
+type Nonce = [16]byte
 
 type MaskedAud = []byte
 type PairwiseSub = []byte
-type MaskedSub = []byte
+type MaskedSub = [NIZK.MaxOutputLength]byte
 
 type ClientIDBinding struct {
 	id   ClientId
@@ -56,8 +56,9 @@ type Request struct {
 }
 
 type UserRPState struct {
-	nonce1      Nonce
-	nonce2      Nonce
+	rpNonce     Nonce
+	uNonce1     Nonce
+	uNonce2     Nonce
 	PairwiseSub PairwiseSub
 }
 
@@ -74,7 +75,7 @@ func tokenBytes(maskedAud MaskedAud, maskedSub MaskedSub, ctx, sid []byte) []byt
 	tkBuf := bytes.NewBuffer(nil)
 	tkBuf.Write([]byte(dstStr + "TOKEN"))
 	tkBuf.Write(maskedAud)
-	tkBuf.Write(maskedSub)
+	tkBuf.Write(maskedSub[:])
 	tkBuf.Write(ctx)
 	tkBuf.Write(sid)
 	return tkBuf.Bytes()
@@ -117,7 +118,7 @@ func (pp *PublicParams) Register(k *PrivateKey, name ClientName, ruri RedirectUr
 }
 
 // Init maps step (5) of the protocol [1, p.7]
-func (pp *PublicParams) Init(ipk *PublicKey, uid UserId, cert ClientIDBinding, nonceRP Nonce) (Request, UserRPState, error) {
+func (pp *PublicParams) Init(ipk *PublicKey, uid UserId, cert ClientIDBinding, rpNonce Nonce) (Request, UserRPState, error) {
 	var buf bytes.Buffer
 	buf.Write([]byte(dstStr + "CERT"))
 	buf.Write(cert.id)
@@ -129,41 +130,29 @@ func (pp *PublicParams) Init(ipk *PublicKey, uid UserId, cert ClientIDBinding, n
 		return Request{}, UserRPState{}, errors.New("invalid certificate")
 	}
 
-	var nonce1 [16]byte
-	_, _ = rand.Read(nonce1[:])
+	var uNonce1 Nonce
+	_, _ = rand.Read(uNonce1[:])
 
-	var nonce2 [16]byte
-	_, _ = rand.Read(nonce2[:])
+	var uNonce2 Nonce
+	_, _ = rand.Read(uNonce2[:])
 
 	hash := sha256.New()
 	hash.Write(cert.id)
-	hash.Write(nonceRP)
-	hash.Write(nonce1[:])
+	hash.Write(rpNonce[:])
+	hash.Write(uNonce1[:])
 	maskedAud := hash.Sum(nil)
 
-	NIZK.BuildCircuitInputs()
-
-	// Need to pad arrays due to the hash that will be proven via the circuit
-	var uidBytes [NIZK.MaxInputLength]byte
-	copy(uidBytes[:], uid)
-
-	var cidBytes [NIZK.MaxInputLength]byte
-	copy(cidBytes[:], cert.id)
+	circuitCidBytes, circuitNonce2Bytes, circuitUidBytes, circuitMaskedSub, err := NIZK.BuildCircuitInputs(cert.id, uNonce2[:], uid)
+	if err != nil {
+		return Request{}, UserRPState{}, err
+	}
 
 	hash.Reset()
-	hash.Write(uidBytes[:])
-	hash.Write(cidBytes[:])
+	hash.Write(circuitUidBytes[:])
+	hash.Write(circuitCidBytes[:])
 	pairwiseSub := hash.Sum(nil)
 
-	var nonce2Bytes [NIZK.MaxInputLength]byte
-	copy(nonce2Bytes[:], nonce2[:])
-
-	hash.Reset()
-	hash.Write(pairwiseSub)
-	hash.Write(nonce2Bytes[:])
-	maskedSub := hash.Sum(nil)
-
-	witness, err := pp.hashProof.NewWitness(cert.id, nonce2[:], uid)
+	witness, err := pp.hashProof.NewWitness(circuitCidBytes, circuitNonce2Bytes, circuitUidBytes, circuitMaskedSub)
 	if err != nil {
 		return Request{}, UserRPState{}, err
 	}
@@ -173,11 +162,14 @@ func (pp *PublicParams) Init(ipk *PublicKey, uid UserId, cert ClientIDBinding, n
 		return Request{}, UserRPState{}, errP
 	}
 
-	return Request{maskedAud, maskedSub, proof}, UserRPState{nonce1[:], nonce2[:], pairwiseSub}, nil
+	return Request{maskedAud, circuitMaskedSub, proof}, UserRPState{rpNonce, uNonce1, uNonce2, pairwiseSub}, nil
 }
 
 func (pp *PublicParams) Response(isk *PrivateKey, uid UserId, req Request, ctx, sid []byte) (PrivateIdToken, error) {
-	pubWitness, err := pp.hashProof.NewPublicWitness(uid)
+	var uidBytes [NIZK.MaxInputLength]byte
+	copy(uidBytes[:], uid)
+
+	pubWitness, err := pp.hashProof.NewPublicWitness(uidBytes, req.maskedSub)
 	if err != nil {
 		return PrivateIdToken{}, err
 	}
@@ -190,17 +182,23 @@ func (pp *PublicParams) Response(isk *PrivateKey, uid UserId, req Request, ctx, 
 	return PrivateIdToken{req.maskedAud, req.maskedSub, ctx, sid, sig}, nil
 }
 
-func (pp *PublicParams) Verify(ipk *PublicKey, id ClientId, nonceRP Nonce, nonceUsr1 Nonce, nonceUsr2 Nonce, pairwiseSub PairwiseSub, tk PrivateIdToken) bool {
+func (pp *PublicParams) Verify(ipk *PublicKey, id ClientId, st UserRPState, tk PrivateIdToken) bool {
 	hash := sha256.New()
 	hash.Write(id)
-	hash.Write(nonceRP)
-	hash.Write(nonceUsr1)
+	hash.Write(st.rpNonce[:])
+	hash.Write(st.uNonce1[:])
 	maskedAud := hash.Sum(nil)
 
+	var circuitNonce2Bytes [NIZK.MaxInputLength]byte
+	copy(circuitNonce2Bytes[:], st.uNonce2[:])
+
 	hash.Reset()
-	hash.Write(pairwiseSub)
-	hash.Write(nonceUsr2)
-	maskedSub := hash.Sum(nil)
+	hash.Write(st.PairwiseSub)
+	hash.Write(circuitNonce2Bytes[:])
+	sum := hash.Sum(nil)
+
+	var maskedSub MaskedSub
+	copy(maskedSub[:], sum)
 
 	tkBytes := tokenBytes(maskedAud, maskedSub, tk.ctx, tk.sid)
 	return pp.rsa.Verify(ipk.rsaPk, tkBytes, tk.sig)

@@ -1,6 +1,7 @@
 package ppoidc
 
 import (
+	"crypto/rand"
 	"testing"
 )
 
@@ -27,13 +28,16 @@ func TestRegister(t *testing.T) {
 
 func TestInit(t *testing.T) {
 	ppoidc, isk, ipk := setupAndKeyGen(t)
+
 	uid := UserId("Test ID")
 	name := ClientName("Test ID")
 	ruid := RedirectUri("Test redirect URI")
 	cert := ppoidc.Register(isk, name, ruid)
-	nonceRP := Nonce("Test nonce RP")
 
-	_, err := ppoidc.Init(ipk, uid, cert, nonceRP)
+	var nonceRP Nonce
+	_, _ = rand.Read(nonceRP[:])
+
+	_, _, err := ppoidc.Init(ipk, uid, cert, nonceRP)
 	if err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
@@ -46,9 +50,11 @@ func TestResponse(t *testing.T) {
 	name := ClientName("Test ID")
 	ruid := RedirectUri("Test redirect URI")
 	cert := ppoidc.Register(isk, name, ruid)
-	nonceRP := Nonce("Test nonce RP")
 
-	req, _ := ppoidc.Init(ipk, uid, cert, nonceRP)
+	var nonceRP Nonce
+	_, _ = rand.Read(nonceRP[:])
+
+	req, _, _ := ppoidc.Init(ipk, uid, cert, nonceRP)
 	ctx := []byte("context")
 	sid := []byte("sessionID")
 
@@ -65,16 +71,18 @@ func TestVerify(t *testing.T) {
 	name := ClientName("Test ID")
 	ruid := RedirectUri("Test redirect URI")
 	cert := ppoidc.Register(isk, name, ruid)
-	nonceRP := Nonce("Test nonce RP")
 
-	req, uNonce1, uNonce2, _ := ppoidc.Init(ipk, uid, cert, nonceRP)
+	var nonceRP Nonce
+	_, _ = rand.Read(nonceRP[:])
+
+	req, st, _ := ppoidc.Init(ipk, uid, cert, nonceRP)
 	ctx := []byte("context")
 	sid := []byte("sessionID")
 
-	tk, _ = ppoidc.Response(isk, uid, req, ctx, sid)
+	tk, _ := ppoidc.Response(isk, uid, req, ctx, sid)
 
-	isValid := ppoidc.Verify(ipk, cert.id, nonceRP)
+	isValid := ppoidc.Verify(ipk, cert.id, st, tk)
 	if !isValid {
-		t.Fatalf("Verify returned false for a valid finalized token")
+		t.Fatalf("Verify returned false for a valid token")
 	}
 }
