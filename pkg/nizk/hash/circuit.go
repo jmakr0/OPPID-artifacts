@@ -1,4 +1,4 @@
-// The circuit for proving statements hash_pub = H( H(in_pub || x) || y), where x and y are witnesses.
+// The circuit for proving statements hash_pub = H( H(s || x) || y), where x and y are witnesses and s a shared input
 
 package hash
 
@@ -13,11 +13,11 @@ import (
 const MaxInputLength = 128
 const MaxOutputLength = 32
 
-// Circuit for proving Image = H( H(PreimagePub || X) || Y) with H = sha256
+// Circuit for proving Image = H( H(SharedInput || X) || Y) with H = sha256
 type Circuit struct {
 	X           [MaxInputLength]uints.U8  `gnark:",private"`
 	Y           [MaxInputLength]uints.U8  `gnark:",private"`
-	PreimagePub [MaxInputLength]uints.U8  `gnark:",public"`
+	SharedInput [MaxInputLength]uints.U8  `gnark:",public"`
 	Image       [MaxOutputLength]uints.U8 `gnark:",public"`
 }
 
@@ -31,7 +31,7 @@ func (c *Circuit) Define(api frontend.API) error {
 	if err != nil {
 		return err
 	}
-	innerPreimage := append(c.PreimagePub[:], c.X[:]...)
+	innerPreimage := append(c.SharedInput[:], c.X[:]...)
 	innerHash.Write(innerPreimage)
 	innerImage := innerHash.Sum()
 
@@ -49,25 +49,26 @@ func (c *Circuit) Define(api frontend.API) error {
 	return nil
 }
 
-func BuildCircuitInputs(x, y, pubPreimage []byte) ([MaxInputLength]byte, [MaxInputLength]byte, [MaxInputLength]byte, [MaxOutputLength]byte, error) {
-	if len(x) > MaxInputLength || len(y) > MaxInputLength || len(pubPreimage) > MaxInputLength {
+// BuildCircuitInputs returns the circuit inputs padded to the correct length in the order: x, y, shared input, image
+func BuildCircuitInputs(x, y, sharedInput []byte) ([MaxInputLength]byte, [MaxInputLength]byte, [MaxInputLength]byte, [MaxOutputLength]byte, error) {
+	if len(x) > MaxInputLength || len(y) > MaxInputLength || len(sharedInput) > MaxInputLength {
 		return [MaxInputLength]byte{}, [MaxInputLength]byte{}, [MaxInputLength]byte{}, [MaxOutputLength]byte{}, errors.New("invalid input length")
 	}
 
-	var inPubBytes [MaxInputLength]byte
-	copy(inPubBytes[:], pubPreimage)
+	var sharedInputBytes [MaxInputLength]byte
+	copy(sharedInputBytes[:], sharedInput)
 
-	var inXBytes [MaxInputLength]byte
-	copy(inXBytes[:], x)
+	var xBytes [MaxInputLength]byte
+	copy(xBytes[:], x)
 
-	innerPreimage := append(inPubBytes[:], inXBytes[:]...)
-	innerHash := sha256.Sum256(innerPreimage)
+	bytes := append(sharedInputBytes[:], xBytes[:]...)
+	innerHash := sha256.Sum256(bytes)
 
-	var inYBytes [MaxInputLength]byte
-	copy(inYBytes[:], y)
+	var yBytes [MaxInputLength]byte
+	copy(yBytes[:], y)
 
-	preimage := append(innerHash[:], inYBytes[:]...)
+	preimage := append(innerHash[:], yBytes[:]...)
 	hash := sha256.Sum256(preimage)
 
-	return inXBytes, inYBytes, inPubBytes, hash, nil
+	return xBytes, yBytes, sharedInputBytes, hash, nil
 }

@@ -2,7 +2,6 @@ package hash
 
 import (
 	"bytes"
-	"errors"
 	"github.com/consensys/gnark-crypto/ecc"
 	"github.com/consensys/gnark/backend/groth16"
 	"github.com/consensys/gnark/backend/witness"
@@ -26,7 +25,6 @@ type VerifyingKey struct{ key groth16.VerifyingKey }
 
 type Witness struct {
 	assignment *Circuit // for testing
-	image      []byte
 	witness    witness.Witness
 }
 type PublicWitness struct{ witness witness.Witness }
@@ -211,17 +209,12 @@ func (pp *PublicParams) KeyGen() (*ProvingKey, *VerifyingKey, error) {
 	}
 }
 
-// NewWitness returns a witness for image = H( H(pub || x) || y) with H = sha256, where pub is public and x,y stay secret
-func (pp *PublicParams) NewWitness(x, y, pubPreimage, image []byte) (Witness, error) {
-	if len(x) != MaxInputLength || len(y) != MaxInputLength || len(pubPreimage) != MaxInputLength || len(image) != MaxOutputLength {
-		return Witness{}, errors.New("input lengths not correct")
-	}
-
-	var preimagePubU8 [MaxInputLength]uints.U8
+func (pp *PublicParams) NewWitness(x, y, sharedInput [MaxInputLength]byte, image [MaxOutputLength]byte) (Witness, error) {
+	var sharedPreimageU8 [MaxInputLength]uints.U8
 	var xU8 [MaxInputLength]uints.U8
 	var yU8 [MaxInputLength]uints.U8
 	for i := 0; i < MaxInputLength; i++ {
-		preimagePubU8[i] = uints.NewU8(pubPreimage[i])
+		sharedPreimageU8[i] = uints.NewU8(sharedInput[i])
 		xU8[i] = uints.NewU8(x[i])
 		yU8[i] = uints.NewU8(y[i])
 	}
@@ -231,42 +224,33 @@ func (pp *PublicParams) NewWitness(x, y, pubPreimage, image []byte) (Witness, er
 		imageU8[i] = uints.NewU8(d)
 	}
 
-	assignment := &Circuit{xU8, yU8, preimagePubU8, imageU8}
-	w, err := frontend.NewWitness(assignment, ecc.BLS12_381.ScalarField())
+	assignment := &Circuit{xU8, yU8, sharedPreimageU8, imageU8}
+	newWitness, err := frontend.NewWitness(assignment, ecc.BLS12_381.ScalarField())
 	if err != nil {
 		return Witness{}, err
 	}
 
-	return Witness{assignment, hash, w}, nil
+	return Witness{assignment, newWitness}, nil
 }
 
-func (pp *PublicParams) NewPublicWitness(pubPreimage, image []byte) (PublicWitness, error) {
-	if len(pubPreimage) > MaxInputLength || len(image) > MaxInputLength {
-		return PublicWitness{}, errors.New("invalid input length")
-	}
+func (pp *PublicParams) NewPublicWitness(sharedInput [MaxInputLength]byte, image [MaxOutputLength]byte) (PublicWitness, error) {
 	// Just empty data to build the circuit
 	var xU8 [MaxInputLength]uints.U8
 	var yU8 [MaxInputLength]uints.U8
 
-	var inPubBytes [MaxInputLength]byte
-	copy(inPubBytes[:], pubPreimage)
-	var preimagePubU8 [MaxInputLength]uints.U8
+	var sharedInputU8 [MaxInputLength]uints.U8
 	for i := 0; i < MaxInputLength; i++ {
-		preimagePubU8[i] = uints.NewU8(inPubBytes[i])
+		sharedInputU8[i] = uints.NewU8(sharedInput[i])
 	}
 	var imageU8 [MaxOutputLength]uints.U8
 	for i := 0; i < MaxOutputLength; i++ {
 		imageU8[i] = uints.NewU8(image[i])
 	}
-	assignment := &Circuit{xU8, yU8, preimagePubU8, imageU8}
+	assignment := &Circuit{xU8, yU8, sharedInputU8, imageU8}
 	w, err := frontend.NewWitness(assignment, ecc.BLS12_381.ScalarField(), frontend.PublicOnly())
 	if err != nil {
 		return PublicWitness{}, err
 	}
-	//pubWitness, err := w.Public()
-	//if err != nil {
-	//	return PublicWitness{}, err
-	//}
 
 	return PublicWitness{w}, nil
 }

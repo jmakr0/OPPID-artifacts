@@ -14,7 +14,7 @@ import (
 	"errors"
 )
 
-const dstStr = "OPPID_BLS12384_XMD:SHA-256_PP-OIDC_"
+const dstStr = "OPPID_BLS12384_XMD:SHA-256_PPOIDC_"
 
 type PublicParams struct {
 	rsa       *RSA.PublicParams
@@ -140,6 +140,8 @@ func (pp *PublicParams) Init(ipk *PublicKey, uid UserId, cert ClientIDBinding, n
 	hash.Write(nonceRP)
 	hash.Write(nonce1[:])
 	maskedAud := hash.Sum(nil)
+
+	NIZK.BuildCircuitInputs()
 
 	// Need to pad arrays due to the hash that will be proven via the circuit
 	var uidBytes [NIZK.MaxInputLength]byte

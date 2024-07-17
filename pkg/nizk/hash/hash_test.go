@@ -16,16 +16,18 @@ func TestHashCircuit(t *testing.T) {
 	assert := test.NewAssert(t)
 	field := ecc.BLS12_381.ScalarField()
 
-	w, err := hashProof.NewWitness([]byte("secret X"), []byte("secret Y"), []byte("public preimage segment"))
+	circuitX, circuitY, circuitSharedInput, circuitImage, _ := BuildCircuitInputs([]byte("nonce X"), []byte("nonce Y"), []byte("shared public input"))
+
+	witness, err := hashProof.NewWitness(circuitX, circuitY, circuitSharedInput, circuitImage)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	errProof := test.IsSolved(&Circuit{}, w.assignment, field)
+	errProof := test.IsSolved(&Circuit{}, witness.assignment, field)
 	assert.NoError(errProof)
 }
 
-func TestHashCircuitWithManipulatedHash(t *testing.T) {
+func TestHashCircuitWithManipulatedImage(t *testing.T) {
 	hashProof, err := Setup()
 	if err != nil {
 		t.Fatal(err)
@@ -34,18 +36,20 @@ func TestHashCircuitWithManipulatedHash(t *testing.T) {
 	assert := test.NewAssert(t)
 	field := ecc.BLS12_381.ScalarField()
 
-	w, err := hashProof.NewWitness([]byte("secret X"), []byte("secret Y"), []byte("public preimage segment"))
+	circuitX, circuitY, circuitSharedInput, circuitImage, _ := BuildCircuitInputs([]byte("nonce X"), []byte("nonce Y"), []byte("shared public input"))
+
+	witness, err := hashProof.NewWitness(circuitX, circuitY, circuitSharedInput, circuitImage)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	w.assignment.Image[0] = uints.NewU8(0xFF) // Manipulate the first byte of the Image
+	witness.assignment.Image[0] = uints.NewU8(0xFF) // Manipulate the first byte of the Image
 
-	errProof := test.IsSolved(&Circuit{}, w.assignment, field)
+	errProof := test.IsSolved(&Circuit{}, witness.assignment, field)
 	assert.Error(errProof)
 }
 
-func TestHashCircuitWithManipulatedPreImage(t *testing.T) {
+func TestHashCircuitWithManipulatedSharedInput(t *testing.T) {
 	hashProof, err := Setup()
 	if err != nil {
 		t.Fatal(err)
@@ -54,14 +58,19 @@ func TestHashCircuitWithManipulatedPreImage(t *testing.T) {
 	assert := test.NewAssert(t)
 	field := ecc.BLS12_381.ScalarField()
 
-	w, err := hashProof.NewWitness([]byte("secret X"), []byte("secret Y"), []byte("public preimage segment"))
+	sharedInput := []byte("shared public input")
+	x := []byte("nonce X")
+	y := []byte("nonce Y")
+
+	circuitX, circuitY, circuitSharedInput, circuitImage, _ := BuildCircuitInputs(x, y, sharedInput)
+	witness, err := hashProof.NewWitness(circuitX, circuitY, circuitSharedInput, circuitImage)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	w.assignment.PreimagePub[0] = uints.NewU8(0xFF) // Manipulate the first byte of the public preimage part
+	witness.assignment.SharedInput[0] = uints.NewU8(0xFF) // Manipulate the first byte of the public preimage part
 
-	errProof := test.IsSolved(&Circuit{}, w.assignment, field)
+	errProof := test.IsSolved(&Circuit{}, witness.assignment, field)
 	assert.Error(errProof)
 }
 
@@ -88,9 +97,9 @@ func TestHashProveVerify(t *testing.T) {
 		t.Fatal(errKGen)
 	}
 
-	sharedInput := []byte("public preimage segment")
+	circuitX, circuitY, circuitSharedInput, circuitImage, _ := BuildCircuitInputs([]byte("nonce X"), []byte("nonce Y"), []byte("shared public input"))
 
-	witness, errW := hashProof.NewWitness([]byte("secret X"), []byte("secret Y"), sharedInput)
+	witness, errW := hashProof.NewWitness(circuitX, circuitY, circuitSharedInput, circuitImage)
 	if errW != nil {
 		t.Fatal(errW)
 	}
@@ -100,14 +109,12 @@ func TestHashProveVerify(t *testing.T) {
 		t.Fatal(errP)
 	}
 
-	//pubWitness, errPW := witness.witness.Public()
-	pubWitness, errPW := hashProof.NewPublicWitness(sharedInput, witness.image)
+	pubWitness, errPW := hashProof.NewPublicWitness(circuitSharedInput, circuitImage)
 	if errPW != nil {
 		t.Fatal(errPW)
 	}
 
 	isValid := hashProof.Verify(proof, pubWitness, vk)
-	//isValid := hashProof.Verify(proof, PublicWitness{pubWitness}, vk)
 	if !isValid {
 		t.Fatal("invalid proof, expected proof to be valid")
 	}
