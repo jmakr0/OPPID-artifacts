@@ -1,3 +1,9 @@
+// Package implements a wrapper around gnark in our setting to provide a proof system, proving hash based statements,
+// which are required by PPOIDC [1].
+
+// References:
+// [1] https://dl.acm.org/doi/10.1145/3320269.3384724
+
 package hash
 
 import (
@@ -234,7 +240,7 @@ func (pp *PublicParams) NewWitness(x, y, sharedInput [MaxInputLength]byte, image
 }
 
 func (pp *PublicParams) NewPublicWitness(sharedInput [MaxInputLength]byte, image [MaxOutputLength]byte) (PublicWitness, error) {
-	// Just empty data to build the circuit
+	// Just empty witness data to build the circuit
 	var xU8 [MaxInputLength]uints.U8
 	var yU8 [MaxInputLength]uints.U8
 

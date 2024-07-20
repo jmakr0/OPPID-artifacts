@@ -1,3 +1,8 @@
+// Package implements a PoC in our setting for proving knowledge of a PS signature [1] via a NIZK.
+
+// References:
+// [1] https://eprint.iacr.org/2015/525.pdf
+
 package sig
 
 import (
@@ -32,7 +37,7 @@ type RandomizedSignature struct {
 	Sig      *PS.Signature
 }
 
-// Randomize corresponds to 6.2: Proving Knowledge of a Signature
+// Randomize corresponds to Sec. 6.2 of the paper [1, p.9].
 func Randomize(sig *PS.Signature) (*GG.Scalar, *PS.Signature) {
 	r := utils.GenerateRandomScalar()
 	t := utils.GenerateRandomScalar()
@@ -63,15 +68,14 @@ func Prove(p PublicInput, w Witness) Proof {
 	pi.a1 = GG.Pair(rndSig.One, yg)
 
 	// Challenge
-	var buff bytes.Buffer
+	var buf bytes.Buffer
 
 	a1Bytes, _ := pi.a1.MarshalBinary()
-	buff.Write(rndSig.One.Bytes())
-	buff.Write(rndSig.Two.Bytes())
-	buff.Write(a1Bytes)
+	buf.Write(rndSig.One.Bytes())
+	buf.Write(rndSig.Two.Bytes())
+	buf.Write(a1Bytes)
 
-	data := buff.Bytes()
-	z := utils.HashToScalar(data, []byte(DSTStr))
+	z := utils.HashToScalar(buf.Bytes(), []byte(DSTStr))
 
 	// Responses
 	m := utils.HashToScalar(w.msg, p.psPp.Dst)
@@ -86,15 +90,14 @@ func Prove(p PublicInput, w Witness) Proof {
 }
 
 func Verify(p PublicInput, pi Proof) bool {
-	var buff bytes.Buffer
+	var buf bytes.Buffer
 
 	a1Bytes, _ := pi.a1.MarshalBinary()
-	buff.Write(pi.rndSig.One.Bytes())
-	buff.Write(pi.rndSig.Two.Bytes())
-	buff.Write(a1Bytes)
+	buf.Write(pi.rndSig.One.Bytes())
+	buf.Write(pi.rndSig.Two.Bytes())
+	buf.Write(a1Bytes)
 
-	data := buff.Bytes()
-	z := utils.HashToScalar(data, []byte(DSTStr))
+	z := utils.HashToScalar(buf.Bytes(), []byte(DSTStr))
 
 	z1 := utils.GenerateG1Point(&z, pi.rndSig.Two)
 

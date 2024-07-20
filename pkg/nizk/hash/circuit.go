@@ -1,4 +1,4 @@
-// The circuit for proving statements hash_pub = H( H(s || x) || y), where x and y are witnesses and s a shared input
+// Circuit for proving statements hash_pub = H( H(s || x) || y), where x and y are witnesses and s a shared input
 
 package hash
 

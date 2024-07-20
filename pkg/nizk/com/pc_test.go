@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestNewVerify(t *testing.T) {
+func TestProveVerify(t *testing.T) {
 	pc := PC.Setup(nil)
 
 	msg := []byte("test")

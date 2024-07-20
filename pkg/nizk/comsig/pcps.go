@@ -1,3 +1,9 @@
+// Package provides a NIZK that proves knowledge of a signature and the opening to a commitment, as descripted in Sec. 4
+// in the OPPID paper [1].
+
+// References:
+// [1] https://eprint.iacr.org/2024/1124
+
 package comsig
 
 import (
