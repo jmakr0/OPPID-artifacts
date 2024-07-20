@@ -1,4 +1,4 @@
-// Implements the core cryptographic operations of the Pairwise POIDC protocol [1].
+// Implements the core cryptographic operations of the Pairwise POIDC protocol [1] in our setting.
 
 // References
 // [1] https://dl.acm.org/doi/10.1145/3320269.3384724
@@ -70,7 +70,6 @@ type PrivateIdToken struct {
 	sig RSA.Signature
 }
 
-// tokenBytes generates a byte representation of the token
 func tokenBytes(maskedAud MaskedAud, maskedSub MaskedSub, ctx, sid []byte) []byte {
 	tkBuf := bytes.NewBuffer(nil)
 	tkBuf.Write([]byte(dstStr + "TOKEN"))

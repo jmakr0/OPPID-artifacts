@@ -1,3 +1,5 @@
+// Implements the operations of the Oblivious Pairwise Pseudonymous Identifier (OPPID) protocol.
+
 package oppid
 
 import (
@@ -16,10 +18,10 @@ import (
 const dstStr = "OPPID_BLS12384_XMD:SHA-256_OPPID_"
 
 type PublicParams struct {
-	rsa       *RSA.PublicParams
-	dstComSig []byte
-	pc        *PC.PublicParams
-	ps        *PS.PublicParams
+	rsa *RSA.PublicParams
+	dst []byte
+	pc  *PC.PublicParams
+	ps  *PS.PublicParams
 }
 
 type PublicKey struct {
@@ -68,6 +70,7 @@ type PPID = []byte
 
 func tokenBytes(com *PC.Commitment, bx, by *GG.G1, ctx, sid []byte) []byte {
 	tkBuf := bytes.NewBuffer(nil)
+	tkBuf.Write([]byte(dstStr + "TOKEN"))
 	tkBuf.Write(com.Element.Bytes())
 	tkBuf.Write(bx.Bytes()) // blinded rid
 	tkBuf.Write(by.Bytes()) // blinded ppid
@@ -138,7 +141,7 @@ func (pp *PublicParams) Request(ipk *PublicKey, rid []byte, cred Credential, cri
 	p := createPublicInputs(pp.pc, ipk.psPk, &crid.com)
 	aux := createAuxBuffer(bx, sid)
 
-	pi := NIZK.Prove(w, p, aux, pp.dstComSig)
+	pi := NIZK.Prove(w, p, aux, pp.dst)
 	return Auth{pi}, nil
 }
 

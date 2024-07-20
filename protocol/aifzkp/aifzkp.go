@@ -1,4 +1,8 @@
-// simplifications: does not consider member state
+// Implements the core cryptographic operations of the AIF-ZKP scheme from [1]. For simplicity, there is no member state
+// that tracks RPs that have been already registered.
+
+// References:
+// [1] https://petsymposium.org/popets/2023/popets-2023-0100.php
 
 package aifzkp
 
@@ -15,10 +19,10 @@ import (
 const dstStr = "OPPID_BLS12384_XMD:SHA-256_AIF-ZKP_"
 
 type PublicParams struct {
-	rsa       *RSA.PublicParams
-	dstComSig []byte
-	pc        *PC.PublicParams
-	ps        *PS.PublicParams
+	rsa *RSA.PublicParams
+	dst []byte
+	pc  *PC.PublicParams
+	ps  *PS.PublicParams
 }
 
 type PublicKey struct {
@@ -59,6 +63,7 @@ type FinalizedToken struct {
 
 func tokenBytes(com *PC.Commitment, uid, ctx, sid []byte) []byte {
 	var buf bytes.Buffer
+	buf.Write([]byte(dstStr + "TOKEN"))
 	buf.Write(com.Element.Bytes())
 	buf.Write(uid)
 	buf.Write(ctx)
@@ -106,7 +111,7 @@ func (pp *PublicParams) Request(ipk *PublicKey, rid []byte, c Credential, crid U
 	p.PS = ipk.psPk
 	p.Com = &crid.com
 
-	pi := NIZK.Prove(w, p, sid, pp.dstComSig)
+	pi := NIZK.Prove(w, p, sid, pp.dst)
 
 	return Auth{pi}
 }

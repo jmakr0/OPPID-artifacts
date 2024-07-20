@@ -28,7 +28,7 @@ type PrivateKey struct {
 	rsaSk *RSA.PrivateKey
 }
 
-type IdRP = GG.G1
+type IdRP = GG.G1    // Identity of an RP
 type EnPtRP = []byte // fictional RP endpoint
 
 type IdU = GG.Scalar
@@ -71,7 +71,7 @@ func (pp *PublicParams) KeyGen() (*PrivateKey, *PublicKey) {
 }
 
 func (pp *PublicParams) Register(k *PrivateKey, id []byte, enPt EnPtRP) CertRP {
-	r := utils.HashToScalar(id, []byte(dstStr))
+	r := utils.HashToScalar(id, []byte(dstStr+"REG"))
 	idRP := utils.GenerateG1Point(&r, GG.G1Generator())
 
 	var buf bytes.Buffer

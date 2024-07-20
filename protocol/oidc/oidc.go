@@ -1,4 +1,8 @@
-// Impl
+// Implements the core cryptographic operations of the standard OIDC protocol with Pairwise Pseudonymous
+// Identifier (PPID) [1] in our setting.
+
+// References:
+// [1] https://openid.net/specs/openid-connect-core-1_0.html#PairwiseAlg
 
 package oidc
 
@@ -58,7 +62,7 @@ func (pp *PublicParams) KeyGen() (*PrivateKey, *PublicKey) {
 func (pp *PublicParams) Response(k *PrivateKey, rid, uid, ctx, sid []byte) Token {
 	var tk Token
 
-	var buf bytes.Buffer // buffer for subject identifier = ppid
+	var buf bytes.Buffer
 	buf.Write(rid)
 	buf.Write(uid)
 	buf.Write(k.salt[:])
