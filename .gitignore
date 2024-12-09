@@ -23,5 +23,7 @@ go.work.sum
 
 # JetBrains
 .idea
+
+# Custom
 *.bin
-*.txt
+*.log
