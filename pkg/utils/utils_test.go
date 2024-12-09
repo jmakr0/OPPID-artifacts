@@ -16,7 +16,7 @@ func TestAddScalars(t *testing.T) {
 	s1 := GenerateRandomScalar()
 	s2 := GenerateRandomScalar()
 
-	sum := AddScalars(s1, s2)
+	sum, _ := AddScalars(s1, s2)
 
 	if sum.IsZero() != 0 {
 		t.Errorf("Expected scalars to be zero")
@@ -27,7 +27,7 @@ func TestMulScalars(t *testing.T) {
 	s1 := GenerateRandomScalar()
 	s2 := GenerateRandomScalar()
 
-	product := MulScalars(s1, s2)
+	product, _ := MulScalars(s1, s2)
 
 	if product.IsZero() != 0 {
 		t.Errorf("Expected scalars to be zero")
@@ -95,5 +95,48 @@ func TestBytesToScalar(t *testing.T) {
 
 	if reconstructedScalar.IsEqual(scalar) != 1 {
 		t.Errorf("BytesToScalar did not reconstruct the scalar correctly")
+	}
+}
+
+func TestAddScalarsErrorOnZero(t *testing.T) {
+	one := new(GG.Scalar)
+	one.SetOne()
+	minusOne := new(GG.Scalar)
+	minusOne.SetOne()
+	minusOne.Neg()
+
+	_, err := AddScalars(one, minusOne)
+	if err == nil {
+		t.Errorf("Expected error when adding one and zero, but got nil")
+	} else {
+		t.Logf("Received expected error: %v", err)
+	}
+}
+
+func TestAddScalarsErrorOnOne(t *testing.T) {
+	zero := new(GG.Scalar)
+	one := new(GG.Scalar)
+	one.SetOne()
+
+	_, err := AddScalars(one, zero)
+	if err == nil {
+		t.Errorf("Expected error when adding one and zero, but got nil")
+	} else {
+		t.Logf("Received expected error: %v", err)
+	}
+}
+
+func TestMulScalarsErrorOnZero(t *testing.T) {
+	zero := new(GG.Scalar) // Will be "zeroed" initialized
+	if zero.IsZero() != 1 {
+		t.Errorf("Zero scalar is not zero")
+	}
+	rndScalar := GenerateRandomScalar()
+
+	_, err := MulScalars(rndScalar, zero)
+	if err == nil {
+		t.Errorf("Expected error when adding one and zero, but got nil")
+	} else {
+		t.Logf("Received expected error: %v", err)
 	}
 }

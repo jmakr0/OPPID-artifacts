@@ -4,6 +4,7 @@ import (
 	"crypto"
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	GG "github.com/cloudflare/circl/ecc/bls12381"
 	"github.com/cloudflare/circl/expander"
 	"log"
@@ -22,22 +23,26 @@ func HashToScalar(data, dst []byte) GG.Scalar {
 	return s
 }
 
-func AddScalars(s1, s2 *GG.Scalar) *GG.Scalar {
+func AddScalars(s1, s2 *GG.Scalar) (*GG.Scalar, error) {
+	one := new(GG.Scalar)
+	one.SetOne()
 	scalar := new(GG.Scalar)
 	scalar.Add(s1, s2)
-	if scalar.IsZero() != 0 {
-		log.Fatalf("Fatal error: invalid scalar after adding scalar")
+	if scalar.IsEqual(one) == 1 || scalar.IsZero() != 0 {
+		return nil, errors.New("error: 0 or 1 scalar after adding scalars")
 	}
-	return scalar
+	return scalar, nil
 }
 
-func MulScalars(s1, s2 *GG.Scalar) *GG.Scalar {
+func MulScalars(s1, s2 *GG.Scalar) (*GG.Scalar, error) {
+	one := new(GG.Scalar)
+	one.SetOne()
 	scalar := new(GG.Scalar)
 	scalar.Mul(s1, s2)
-	if scalar.IsZero() != 0 {
-		log.Fatalf("Fatal error: invalid scalar after multiplication")
+	if scalar.IsEqual(one) == 1 || scalar.IsZero() != 0 {
+		return nil, errors.New("error: 0 or 1 scalar after multiplication")
 	}
-	return scalar
+	return scalar, nil
 }
 
 func GenerateRandomScalar() *GG.Scalar {
