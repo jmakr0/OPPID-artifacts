@@ -1,4 +1,4 @@
-// Package provides a NIZK that proves knowledge of a signature and the opening to a commitment, as described in Sec. 4
+// Package provides a NIZK that proves knowledge of a signature and the opening to a commitment, as required in Sec. 4
 // in the OPPID paper [1].
 
 // References:
@@ -84,14 +84,22 @@ func Prove(w Witnesses, p PublicInputs, aux []byte, dst []byte) Proof {
 
 	// Responses
 	m := utils.HashToScalar(w.Msg, dst)
-	mz := utils.MulScalars(&m, &z)
-	pi.r1 = utils.AddScalars(u1, mz)
+	mz, err1 := utils.MulScalars(&m, &z)
+	r1, err2 := utils.AddScalars(u1, mz)
 
-	o := utils.MulScalars(w.Opening.Scalar, &z)
-	pi.r2 = utils.AddScalars(u2, o)
+	o, err3 := utils.MulScalars(w.Opening.Scalar, &z)
+	r2, err4 := utils.AddScalars(u2, o)
 
-	tz := utils.MulScalars(t, &z)
-	pi.r3 = utils.AddScalars(u3, tz)
+	tz, err5 := utils.MulScalars(t, &z)
+	r3, err6 := utils.AddScalars(u3, tz)
+
+	if err1 != nil || err2 != nil || err3 != nil || err4 != nil || err6 != nil {
+		log.Fatalf("error generating proof for commitment/signature: %v, %v, %v, %v, %v, %v", err1, err2, err3, err4, err5, err6)
+	}
+
+	pi.r1 = r1
+	pi.r2 = r2
+	pi.r3 = r3
 
 	return pi
 }
