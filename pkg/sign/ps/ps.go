@@ -57,8 +57,8 @@ func (pp *PublicParams) Sign(k *PrivateKey, msg []byte) Signature {
 	sig.One = utils.GenerateG1Point(u, GG.G1Generator())
 
 	m := utils.HashToScalar(msg, pp.Dst)
-	ym := utils.MulScalars(k.y, &m)
-	exp := utils.AddScalars(k.x, ym) // x+y*m
+	ym, _ := utils.MulScalars(k.y, &m)
+	exp, _ := utils.AddScalars(k.x, ym) // x+y*m
 
 	sig.Two = utils.GenerateG1Point(exp, sig.One)
 
