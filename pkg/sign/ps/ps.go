@@ -57,13 +57,11 @@ func (pp *PublicParams) Sign(k *PrivateKey, msg []byte) Signature {
 	sig.One = utils.GenerateG1Point(u, GG.G1Generator())
 
 	m := utils.HashToScalar(msg, pp.Dst)
-	ym, err := utils.MulScalars(k.y, &m)
-	if err != nil {
-		log.Fatalf("error generating PS signature: %v", err)
-	}
-	exp, err := utils.AddScalars(k.x, ym) // x+y*m
-	if err != nil {
-		log.Fatalf("error generating PS signature: %v", err)
+	ym, err1 := utils.MulScalars(k.y, &m)
+	exp, err2 := utils.AddScalars(k.x, ym) // x+y*m
+
+	if err1 != nil || err2 != nil {
+		log.Fatalf("error generating PS signature: multiplication %v, addition %v", err1, err2)
 	}
 
 	sig.Two = utils.GenerateG1Point(exp, sig.One)
