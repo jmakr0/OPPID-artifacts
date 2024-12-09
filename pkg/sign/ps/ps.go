@@ -57,8 +57,14 @@ func (pp *PublicParams) Sign(k *PrivateKey, msg []byte) Signature {
 	sig.One = utils.GenerateG1Point(u, GG.G1Generator())
 
 	m := utils.HashToScalar(msg, pp.Dst)
-	ym, _ := utils.MulScalars(k.y, &m)
-	exp, _ := utils.AddScalars(k.x, ym) // x+y*m
+	ym, err := utils.MulScalars(k.y, &m)
+	if err != nil {
+		log.Fatalf("error generating PS signature: %v", err)
+	}
+	exp, err := utils.AddScalars(k.x, ym) // x+y*m
+	if err != nil {
+		log.Fatalf("error generating PS signature: %v", err)
+	}
 
 	sig.Two = utils.GenerateG1Point(exp, sig.One)
 
@@ -67,7 +73,7 @@ func (pp *PublicParams) Sign(k *PrivateKey, msg []byte) Signature {
 
 func (pp *PublicParams) Verify(pk *PublicKey, msg []byte, sig Signature) bool {
 	if !sig.One.IsOnG1() || sig.One.IsIdentity() {
-		log.Fatalf("Error verifying psPk signature: sigma one not on G1 curve or is identity")
+		log.Fatalf("Error verifying PS signature: sigma one not on G1 curve or is identity")
 	}
 
 	m := utils.HashToScalar(msg, pp.Dst)
