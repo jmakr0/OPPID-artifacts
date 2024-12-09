@@ -49,3 +49,10 @@ BenchmarkOPPIDInit-8          	    1096	   1097830 ns/op	         1.098 ms/op	  
 - 1.098 ms/op is the average time per operation in milliseconds.
 - 3521 B/op is the number of bytes allocated per operation. 
 - 72 allocs/op is the number of memory allocations per operation.
+
+
+# Execution
+
+```shell
+go test -bench=. -timeout=120m -benchmem ./pkg/...
+```

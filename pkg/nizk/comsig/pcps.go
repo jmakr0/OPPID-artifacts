@@ -1,4 +1,4 @@
-// Package provides a NIZK that proves knowledge of a signature and the opening to a commitment, as descripted in Sec. 4
+// Package provides a NIZK that proves knowledge of a signature and the opening to a commitment, as described in Sec. 4
 // in the OPPID paper [1].
 
 // References:

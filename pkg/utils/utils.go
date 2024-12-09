@@ -48,6 +48,22 @@ func GenerateRandomScalar() *GG.Scalar {
 	return scalar
 }
 
+func GenerateRandomScalarNotOne() *GG.Scalar {
+	one := new(GG.Scalar)
+	one.SetOne()
+	retryLimit := 3
+	for retries := 0; retries <= retryLimit; retries++ {
+		scalar := GenerateRandomScalar()
+		if scalar.IsEqual(one) == 0 {
+			return scalar
+		}
+		if retries == retryLimit {
+			log.Fatalf("Fatal error: failed to generate a random scalar not equal to 1 after %d attempts", retries+1)
+		}
+	}
+	return nil // This line will never be reached because of log.Fatalf
+}
+
 func GenerateG1Point(scalar *GG.Scalar, base *GG.G1) *GG.G1 {
 	point := new(GG.G1)
 	point.ScalarMult(scalar, base)

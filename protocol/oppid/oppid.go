@@ -120,7 +120,7 @@ func (pp *PublicParams) Register(k *PrivateKey, rid []byte) Credential {
 
 func (pp *PublicParams) Init(rid []byte) (UsrOpening, UsrCommitment) {
 	com, opn := pp.pc.Commit(rid)
-	b := utils.GenerateRandomScalar()
+	b := utils.GenerateRandomScalarNotOne()
 	bx := utils.GenerateG1Point(b, hashToPoint(rid, []byte(dstStr)))
 	return UsrOpening{opn, b}, UsrCommitment{com, bx}
 }

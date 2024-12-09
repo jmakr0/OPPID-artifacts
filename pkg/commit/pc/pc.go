@@ -1,6 +1,4 @@
-// Package implements basic Pedersen commitments [1] for our setting.
-
-// References:
+// Package implements basic Pedersen commitments [1].
 // [1] https://link.springer.com/chapter/10.1007/3-540-46766-1_9
 
 package pc

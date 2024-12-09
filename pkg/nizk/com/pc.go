@@ -1,4 +1,4 @@
-// Package provides a NIZK for Pedersen commitments (PC). It is not used directly and is kept here for testing and as a POC.
+// Package provides a NIZK for Pedersen commitments (PC). It is not directly used and is kept here for testing.
 
 package com
 
