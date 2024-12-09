@@ -1,4 +1,4 @@
-// Package implements a PoC in our setting for proving knowledge of a PS signature [1] via a NIZK.
+// Package implements a POK in our setting for proving knowledge of a PS signature [1].
 
 // References:
 // [1] https://eprint.iacr.org/2015/525.pdf
@@ -80,11 +80,18 @@ func Prove(p PublicInput, w Witness) Proof {
 	// Responses
 	m := utils.HashToScalar(w.msg, p.psPp.Dst)
 
-	mz := utils.MulScalars(&m, &z)
-	pi.s1 = utils.AddScalars(u1, mz)
+	mz, err1 := utils.MulScalars(&m, &z)
+	s1, err2 := utils.AddScalars(u1, mz)
 
-	tz := utils.MulScalars(t, &z)
-	pi.s2 = utils.AddScalars(u2, tz)
+	tz, err3 := utils.MulScalars(t, &z)
+	s2, err4 := utils.AddScalars(u2, tz)
+
+	if err1 != nil || err2 != nil || err3 != nil || err4 != nil {
+		log.Fatalf("error generating proof of a PS signature: %v, %v, %v, %v", err1, err2, err3, err4)
+	}
+
+	pi.s1 = s1
+	pi.s2 = s2
 
 	return pi
 }
@@ -124,7 +131,7 @@ func Verify(p PublicInput, pi Proof) bool {
 
 	isValid := lhs.IsEqual(rhs)
 	if !isValid {
-		log.Println("Invalid PublicParams signature")
+		log.Println("Invalid PS signature")
 	}
 
 	return isValid
