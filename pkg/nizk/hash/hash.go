@@ -1,5 +1,5 @@
-// Package implements a wrapper around gnark in our setting to provide a proof system, proving hash based statements,
-// which are required by PPOIDC [1].
+// The package provides a wrapper around Gnark tailored to our use case, enabling a proof system for hash-based
+// statements as required by PPOIDC [1] (p. 7). Specifically, it proves statements of the form H(H(user_id||x)||y).
 
 // References:
 // [1] https://dl.acm.org/doi/10.1145/3320269.3384724
@@ -19,12 +19,12 @@ import (
 )
 
 const (
-	circuitFileName = "circuit.r1cs.bin"
-	pkFileName      = "proving_key.bin"
-	vkFileName      = "verification_key.bin"
+	CircuitFileName = "circuit.r1cs.bin"
+	PkFileName      = "proving_key.bin"
+	VkFileName      = "verification_key.bin"
 )
 
-type PublicParams struct{ cs constraint.ConstraintSystem }
+type PublicParams struct{ CS constraint.ConstraintSystem }
 
 type ProvingKey struct{ key groth16.ProvingKey }
 type VerifyingKey struct{ key groth16.VerifyingKey }
@@ -180,8 +180,8 @@ func generateAndSaveKeysToFiles(cs constraint.ConstraintSystem, pkFilePath, vkFi
 }
 
 func Setup() (*PublicParams, error) {
-	if _, errCSFile := os.Stat(circuitFileName); errCSFile == nil {
-		cs, csErr := loadCS(circuitFileName)
+	if _, errCSFile := os.Stat(CircuitFileName); errCSFile == nil {
+		cs, csErr := loadCS(CircuitFileName)
 		if csErr != nil {
 			return nil, csErr
 		}
@@ -191,7 +191,7 @@ func Setup() (*PublicParams, error) {
 		if csErr != nil {
 			return nil, csErr
 		}
-		errStoreCS := saveCSToFile(cs, circuitFileName)
+		errStoreCS := saveCSToFile(cs, CircuitFileName)
 		if errStoreCS != nil {
 			return nil, errStoreCS
 		}
@@ -200,14 +200,14 @@ func Setup() (*PublicParams, error) {
 }
 
 func (pp *PublicParams) KeyGen() (*ProvingKey, *VerifyingKey, error) {
-	if _, errVkFile := os.Stat(vkFileName); errVkFile == nil {
-		pk, vk, errKGen := loadKeys(pkFileName, vkFileName)
+	if _, errVkFile := os.Stat(VkFileName); errVkFile == nil {
+		pk, vk, errKGen := loadKeys(PkFileName, VkFileName)
 		if errKGen != nil {
 			return nil, nil, errKGen
 		}
 		return &ProvingKey{pk}, &VerifyingKey{vk}, nil
 	} else {
-		pk, vk, errKeys := generateAndSaveKeysToFiles(pp.cs, pkFileName, vkFileName)
+		pk, vk, errKeys := generateAndSaveKeysToFiles(pp.CS, PkFileName, VkFileName)
 		if errKeys != nil {
 			return nil, nil, errKeys
 		}
@@ -262,7 +262,7 @@ func (pp *PublicParams) NewPublicWitness(sharedInput [MaxInputLength]byte, image
 }
 
 func (pp *PublicParams) Prove(w Witness, pk *ProvingKey) (Proof, error) {
-	proof, err := groth16.Prove(pp.cs, pk.key, w.witness)
+	proof, err := groth16.Prove(pp.CS, pk.key, w.witness)
 	if err != nil {
 		return Proof{}, err
 	}
