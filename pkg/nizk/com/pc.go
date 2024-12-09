@@ -51,11 +51,15 @@ func Prove(p *PublicInput, w *Witness) *Proof {
 	// Responses
 	m := utils.HashToScalar(w.msg, p.params.Dst)
 
-	mz := utils.MulScalars(&m, &z)
-	s1 := utils.AddScalars(u1, mz)
+	mz, err1 := utils.MulScalars(&m, &z)
+	s1, err2 := utils.AddScalars(u1, mz)
 
-	oz := utils.MulScalars(w.opening.Scalar, &z)
-	s2 := utils.AddScalars(u2, oz)
+	oz, err3 := utils.MulScalars(w.opening.Scalar, &z)
+	s2, err4 := utils.AddScalars(u2, oz)
+
+	if err1 != nil || err2 != nil || err3 != nil || err4 != nil {
+		log.Fatalf("error generating proof of a message/opening: %v, %v, %v, %v", err1, err2, err3, err4)
+	}
 
 	return &Proof{
 		a1: a1, s1: s1, s2: s2,
