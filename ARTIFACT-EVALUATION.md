@@ -24,7 +24,7 @@ The artifact does not require special hardware.
 No third-party software, data sets, or models are required.
 
 ### Estimated Time and Storage Consumption
-Operations are mostly CPU bound. Benchmark execution in an Apple M1 (2020) requires about XXX minutes.
+Operations are mostly CPU bound. Benchmark execution in an Apple M1 (2020) requires about 10 minutes.
 
 ## Environment
 Access is given via GitHub and execution can be done either directly or through a container.
