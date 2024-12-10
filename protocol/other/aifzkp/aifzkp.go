@@ -8,9 +8,9 @@ package aifzkp
 
 import (
 	PC "OPPID/pkg/oppid/commit/pc"
+	NIZK "OPPID/pkg/oppid/nizk/comsig"
 	PS "OPPID/pkg/oppid/sign/ps"
 	RSA "OPPID/pkg/oppid/sign/rsa256"
-	NIZK "OPPID/pkg/other/nizk/comsig"
 	"bytes"
 	"errors"
 	"log"
