@@ -4,7 +4,7 @@
 package pc
 
 import (
-	utils "OPPID/pkg/utils"
+	"OPPID/pkg/utils"
 	GG "github.com/cloudflare/circl/ecc/bls12381"
 	"log"
 )
