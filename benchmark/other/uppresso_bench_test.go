@@ -1,8 +1,8 @@
-package benchmark
+package other
 
 import (
 	"OPPID/pkg/oppid/utils"
-	UPPRESSO "OPPID/protocol/uppresso"
+	UPPRESSO "OPPID/protocol/other/uppresso"
 	GG "github.com/cloudflare/circl/ecc/bls12381"
 	"testing"
 	"time"

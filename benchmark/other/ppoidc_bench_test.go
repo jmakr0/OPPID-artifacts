@@ -1,7 +1,7 @@
-package benchmark
+package other
 
 import (
-	PPOIDC "OPPID/protocol/ppoidc"
+	PPOIDC "OPPID/protocol/other/ppoidc"
 	"crypto/rand"
 	"testing"
 	"time"

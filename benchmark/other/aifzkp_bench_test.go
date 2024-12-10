@@ -1,7 +1,7 @@
-package benchmark
+package other
 
 import (
-	"OPPID/protocol/aifzkp"
+	"OPPID/protocol/other/aifzkp"
 	"testing"
 	"time"
 )

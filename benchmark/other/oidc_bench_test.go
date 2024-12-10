@@ -1,7 +1,7 @@
-package benchmark
+package other
 
 import (
-	OIDC "OPPID/protocol/oidc"
+	OIDC "OPPID/protocol/other/oidc"
 	"testing"
 	"time"
 )
