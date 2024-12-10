@@ -2,7 +2,7 @@
 
 Paper title: **OPPID: Single Sign-On with Oblivious Pairwise Pseudonyms**
 
-Artifacts HotCRP Id: **todo** (enter artifacts id)
+Artifacts HotCRP Id: 12
 
 Requested Badge: **Reproduced**
 
@@ -18,13 +18,13 @@ The artifact does not hold any risks to the security or privacy of the reviewer'
 - **Linux/macOS environment** (recommended).
 
 ### Hardware Requirements
-The artifact does not require special hardware.
+The artifact does not require special hardware (can be executed on a laptop).
 
 ### Software Requirements
 All packages (cloudflair/circle, gnark) will be setup with `go`.
 
 ### Estimated Time and Storage Consumption
-Operations are mostly CPU bound. Benchmark execution in an Apple M1 (2020) requires about 10 minutes.
+Operations are mostly CPU bound. Benchmark execution on an Apple M1 (2020) requires about 10 minutes.
 
 ## Environment
 Access is given via GitHub and execution can be done either directly or through a container.
