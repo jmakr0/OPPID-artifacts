@@ -1,7 +1,7 @@
 # OPPID: Single Sign-On with Oblivious Pairwise Pseudonyms
 
-This repository contains the implementation of the OPPID protocol, as described in the paper published at [PETS'25](https://petsymposium.org/2025/paperlist.php). 
-It also includes benchmarks for the evaluation in Section 5 of the paper. These benchmarks compare the cryptographic 
+This repository contains a prototypical implementation of the OPPID protocol, as described in the paper published at [PETS'25](https://petsymposium.org/2025/paperlist.php). 
+It also includes benchmarks for the evaluation in Section 5 of the paper. Overall, these benchmarks compare the cryptographic 
 operations of five Single Sign-On (SSO) protocols, focusing on execution times and resource usage in an isolated environment.
 
 The four SSO protocols contrasted against OPPID are:
