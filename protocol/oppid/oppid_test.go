@@ -1,10 +1,17 @@
 package oppid
 
 import (
+<<<<<<< HEAD
+	PC "OPPID/pkg/oppid/commit/pc"
+	PS "OPPID/pkg/oppid/sign/ps"
+	"OPPID/pkg/oppid/utils"
+	NIZK "OPPID/pkg/other/nizk/comsig"
+=======
 	PC "OPPID/pkg/commit/pc"
 	NIZK "OPPID/pkg/nizk/comsig"
 	PS "OPPID/pkg/sign/ps"
 	"OPPID/pkg/utils"
+>>>>>>> main
 	GG "github.com/cloudflare/circl/ecc/bls12381"
 	"testing"
 )
