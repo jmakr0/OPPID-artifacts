@@ -78,11 +78,11 @@ Benchmark results are saved in a format that includes details about execution ti
 An example result entry:
 ```text
 BenchmarkOPPIDInit-8                1096     1097830 ns/op           1.098 ms/op      3521 B/op       72 allocs/op
-- 1096: Number of iterations.
-- 1097830 ns/op: Average time per operation in nanoseconds.
-- 1.098 ms/op: Average time per operation in milliseconds.
-- 3521 B/op: Bytes allocated per operation.
-- 72 allocs/op: Memory allocations per operation.
+- 1096: Number of iterations
+- 1097830 ns/op: Average time per operation in nanoseconds
+- 1.098 ms/op: Average time per operation in milliseconds
+- 3521 B/op: Bytes allocated per operation
+- 72 allocs/op: Memory allocations per operation
 ```
 
 ### Evaluation Results
