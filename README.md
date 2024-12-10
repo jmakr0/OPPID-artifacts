@@ -104,6 +104,19 @@ To execute all package tests:
 go test ./pkg/...
 ```
 
+### Circuit Details
+
+To obtain detailed information about the compiled (R1CS) circuit, execute the following script:
+```shell
+./bin/run_circuit_metadata.sh
+```
+This script outputs key metrics for your reference, including:
+- Number of constraints: The total constraints in the circuit
+- Key generation time: The time required for key generation (measured in seconds)
+- Size of the circuit (in MB)
+- Size of the proving key (in MB)
+- Size of the verification key (in MB)
+
 ## Citing
 
 If you use this implementation in your research or draw insights from the OPPID paper, please consider citing it.
