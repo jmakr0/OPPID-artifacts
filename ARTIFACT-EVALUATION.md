@@ -31,12 +31,12 @@ Operations are mostly CPU bound. Benchmark execution on an Apple M1 (2020) requi
 Access is given via GitHub and execution can be done either directly or through a container.
 
 ### Accessibility (All badges)
-The artifact can be reviewed under: [OPPID](https://github.com/jmakr0/OPPID)
+The artifact can be reviewed under: [OPPID-artifacts](https://github.com/jmakr0/OPPID-artifacts)
 
 ### Set up the environment (Only for Functional and Reproduced badges)
 Clone repository and make all executables runnable:
 ```bash
-git clone git@github.com:jmakr0/OPPID.git
+git clone git@github.com:jmakr0/OPPID-artifacts.git
 chmod +x bin/*.sh
 ```
 
@@ -53,27 +53,27 @@ The artifact can be executed using either of the following methods:
 
 To execute the benchmarks directly, run:
 ```shell
-./bin/run_benchmarks.sh
+./run_benchmarks.sh
 ```
 
 Results will be stored in `./benchmark_results.log` by default. You can also customize the output file name using:
 ```shell
-./bin/run_benchmarks.sh benchmark_results_custom.log
+./run_benchmarks.sh benchmark_results_custom.log
 ```
 
 #### Using Docker
 
 To execute all benchmarks within a Docker container, run:
 ```shell
-./bin/run_benchmarks_container.sh
+./run_benchmarks_docker.sh
 ```
 As with direct execution, you can customize the log file name using an additional argument.
 
 
 ## Artifact Evaluation (Only for Functional and Reproduced badges)
 
-The benchmarks compare the cryptographic operations of five Single Sign-On (SSO) protocols, focusing on execution 
-times and resource usage in an isolated environment.
+The benchmarks compare the costs of the cryptographic operations of OPPID against four other Single Sign-On (SSO) protocols, 
+focusing on execution times and resource usage in an isolated environment.
 
 The four SSO protocols contrasted against OPPID are:
 - [OIDC (OpenID Connect)](https://openid.net/specs/openid-connect-core-1_0.html#PairwiseAlg)
@@ -98,6 +98,9 @@ each take only about 2ms, proof verification (Res) at the IdP requires only 12ms
 after a 8ms generation time at the RP (Req).
 
 #### Main Result 2: Communication Costs
+
+todo: its more an "observation" than a main result; put it as "sub-case" of the previous
+
 The communications costs are:
 - OPPID: the authentication proof and blinded `rid` value result in 864 bytes
 - PPOIDC: the pre-compiled circuit has 56MB and a 121MB proving key
@@ -114,10 +117,10 @@ List each experiment the reviewer has to execute. Describe:
 The benchmarks can be executed as follows:
 ```shell
 # Either directly
-./bin/run_benchmarks.sh
+./run_benchmarks.sh
 
 # Or using docker
-./bin/run_benchmarks_container.sh
+./run_benchmarks_docker.sh
 ```
 Results will be stored in `./benchmark_results.log` and exhibit a format that includes details about execution 
 time and memory usage for each protocol. An example result entry:
@@ -134,14 +137,14 @@ BenchmarkOPPIDInit-8                1096     1097830 ns/op           1.098 ms/op
 
 #### Experiment 2: Communication Costs
 The costs for an Element in $(Z_q, G_1, G_2, G_T)$ are 
-([32](https://github.com/cloudflare/circl/blob/91946a37b9b8da646abe6252153d918707cda136/ecc/bls12381/ff/scalar.go#L10),[48](https://github.com/cloudflare/circl/blob/91946a37b9b8da646abe6252153d918707cda136/ecc/bls12381/g1.go#L18),[92](https://github.com/cloudflare/circl/blob/91946a37b9b8da646abe6252153d918707cda136/ecc/bls12381/g2.go#L16),[576](https://github.com/cloudflare/circl/blob/91946a37b9b8da646abe6252153d918707cda136/ecc/bls12381/gt.go#L6),)
+([32](https://github.com/cloudflare/circl/blob/91946a37b9b8da646abe6252153d918707cda136/ecc/bls12381/ff/scalar.go#L10), [48](https://github.com/cloudflare/circl/blob/91946a37b9b8da646abe6252153d918707cda136/ecc/bls12381/g1.go#L18), [92](https://github.com/cloudflare/circl/blob/91946a37b9b8da646abe6252153d918707cda136/ecc/bls12381/g2.go#L16), [576](https://github.com/cloudflare/circl/blob/91946a37b9b8da646abe6252153d918707cda136/ecc/bls12381/gt.go#L6),)
 byes.
 
-- OPPID: The proof struct can be seen [here](), encompassing $(3Z_q + 3G_1 + 1G_T)$, and the blinded `rid` value has $1G_1$, resulting in $3*32+4*48+576=864$ bytes.
+- OPPID: The proof struct can be seen [here](), encompassing $(3Z_q + 3G_1 + 1G_T)$ plus the blinded `rid` value with $1G_1$, resulting in $ 3*32+4*48+576=864 $ bytes.
 
 To obtain detailed information about the compiled (R1CS) circuit, which is required for PPOIDC, execute the following script:
 ```shell
-./bin/run_circuit_metadata.sh
+go test -v -run ^TestCircuitMetadata$ ./pkg/other/nizk/hash
 ```
 This script outputs key metrics for your reference, including:
 - Number of constraints: The total constraints in the circuit
