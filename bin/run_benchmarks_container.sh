@@ -1,6 +1,6 @@
 #!/bin/sh
 
-RESULTS_FILE=${RESULTS_FILE:-benchmark_results.log}
+RESULTS_FILE=${1:-benchmark_results.log}
 
 echo "Build container ..."
 
