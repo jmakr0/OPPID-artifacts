@@ -37,7 +37,9 @@ The artifact can be reviewed under: [OPPID-artifacts](https://github.com/jmakr0/
 Clone repository and make all executables runnable:
 ```bash
 git clone git@github.com:jmakr0/OPPID-artifacts.git
-chmod +x bin/*.sh
+cd OPPID-artifacts
+chmod +x run_benchmarks.sh
+chmod +x run_benchmarks_docker.sh
 ```
 
 If running benchmarks locally (outside a container), install the required dependencies:
