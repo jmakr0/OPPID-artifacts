@@ -26,6 +26,7 @@ All packages (cloudflair/circle, gnark) will be setup with `go`.
 ### Estimated Time and Storage Consumption
 Operations are mostly CPU bound. Benchmark execution on an Apple M1 (2020) requires about 10 minutes.
 
+
 ## Environment
 Access is given via GitHub and execution can be done either directly or through a container.
 
