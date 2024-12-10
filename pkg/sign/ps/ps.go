@@ -1,3 +1,8 @@
+// Package implements PS signatures [1], used for signatures with efficient proofs of knowledge.
+
+// References:
+// [1] https://eprint.iacr.org/2015/525.pdf
+
 package ps
 
 import (
