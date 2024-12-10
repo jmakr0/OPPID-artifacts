@@ -109,11 +109,11 @@ go test ./pkg/...
 
 ### Circuit Details
 
-To obtain detailed information about the compiled (R1CS) circuit, execute the following script:
+To obtain information about the compiled (R1CS) circuit, which is required for Pairwise PPOIDC, execute the following:
 ```shell
 go test -v -run ^TestCircuitMetadata$ ./pkg/other/nizk/hash
 ```
-This script outputs key metrics for your reference, including:
+The test outputs key metrics for your reference, including:
 - Number of constraints: The total constraints in the circuit
 - Key generation time: The time required for key generation (measured in seconds)
 - Size of the circuit (in MB)
