@@ -1,11 +1,12 @@
 # OPPID: Single Sign-On with Oblivious Pairwise Pseudonyms
 
 This repository contains a prototypical implementation of the OPPID protocol, as described in the paper published at [PETS'25](https://petsymposium.org/2025/paperlist.php). 
-It also includes benchmarks for the evaluation in Section 5 of the paper. Overall, these benchmarks compare the cryptographic 
-operations of five Single Sign-On (SSO) protocols, focusing on execution times and resource usage in an isolated environment.
+It also includes the evaluation benchmarks of Section 5 in the paper. Overall, these benchmarks compare the costs of the 
+cryptographic operations of OPPID against four other Single Sign-On (SSO) protocols, focusing on execution times and 
+resource usage in an isolated environment.
 
 The four SSO protocols contrasted against OPPID are:
-- [OIDC (OpenID Connect)](https://openid.net/specs/openid-connect-core-1_0.html#PairwiseAlg)
+- [OIDC (OpenID Connect)](https://openid.net/specs/openid-connect-core-1_0.html)
 - [AIF-ZKP](https://petsymposium.org/popets/2023/popets-2023-0100.php)
 - [Pairwise POIDC](https://dl.acm.org/doi/10.1145/3320269.3384724)
 - [UPPRESSO](https://arxiv.org/pdf/2110.10396)
@@ -19,11 +20,12 @@ Additionally, Pairwise POIDC's pre-image proof of a standard hash function is re
 
 ```text
 OPPID/
-├── benchmark/                 # Benchmarks for individual protocols
-├── bin/                       # Executable scripts and binaries
+├── benchmark/                 # Benchmarks for OPPID and the four other SSO protocols
 ├── pkg/                       # Go packages implementing cryptographic building blocks
 ├── protocol/                  # Protocol definitions and implementations
 ├── dockerfile                 # Docker configuration for containerized benchmarking
+├── run_benchmark.sh           # Execute benchmarks directly (requires dependency setup)
+├── run_benchmark_docker.sh    # Execute benchmarks within a docker container
 ```
 
 ## Setup
@@ -37,9 +39,10 @@ Before running the benchmarks, ensure that the environment is correctly set up.
 
 #### Installation
 
-Make all executables runnable:
+Make scripts executable:
 ```shell
-chmod +x bin/*.sh
+chmod +x run_benchmarks.sh
+chmod +x run_benchmarks_docker.sh
 ```
 
 If running benchmarks locally (outside a container), install the required dependencies:
@@ -55,19 +58,19 @@ Benchmarks can be executed using either of the following methods:
 
 To execute the benchmarks directly, run:
 ```shell
-./bin/run_benchmarks.sh
+./run_benchmarks.sh
 ```
 
 Results will be stored in `./benchmark_results.log` by default. You can also customize the output file name using:
 ```shell
-./bin/run_benchmarks.sh benchmark_results_custom.log
+./run_benchmarks.sh benchmark_results_custom.log
 ```
 
 #### Using Docker
 
 To execute all benchmarks within a Docker container, run:
 ```shell
-./bin/run_benchmarks_container.sh
+./run_benchmarks_container.sh
 ```
 
 As with direct execution, you can customize the log file name using an additional argument.
@@ -108,7 +111,7 @@ go test ./pkg/...
 
 To obtain detailed information about the compiled (R1CS) circuit, execute the following script:
 ```shell
-./bin/run_circuit_metadata.sh
+go test -v -run ^TestCircuitMetadata$ ./pkg/other/nizk/hash
 ```
 This script outputs key metrics for your reference, including:
 - Number of constraints: The total constraints in the circuit
