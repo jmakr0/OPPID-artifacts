@@ -1,131 +1,120 @@
 # Artifact Appendix
 
-Paper title: **OPPID: Single Sign-On with Oblivious Pairwise Pseudonyms**
+**Paper Title**: **OPPID: Single Sign-On with Oblivious Pairwise Pseudonyms**
 
-Artifacts HotCRP Id: 12
+**Artifacts HotCRP ID**: 12
 
-Requested Badge: **Reproduced**
+**Requested Badge**: **Reproduced**
 
 ## Description
-This artifact provides benchmarks of a prototypical OPPID protocol implementation, evaluated in Section 5 of the paper.
+This artifact includes benchmarks of a prototype OPPID protocol implementation, as evaluated in Section 5 of the paper.
 
-### Security/Privacy Issues and Ethical Concerns (All badges)
-The artifact does not hold any risks to the security or privacy of the reviewer's machine as well as ethical concerns.
+### Security/Privacy Issues and Ethical Concerns (All Badges)
+The artifact poses no risks to the security or privacy of the reviewer's machine and raises no ethical concerns.
 
-## Basic Requirements (Only for Functional and Reproduced badges)
-- **Go programming language**: Version 1.23 or later.
-- **Docker**: For containerized execution (optional).
-- **Linux/macOS environment** (recommended).
+## Basic Requirements (Only for Functional and Reproduced Badges)
+
+- **Go Programming Language**: Version 1.23 or later.
+- **Docker**: For optional containerized execution.
+- **Linux/macOS Environment**: Recommended.
 
 ### Hardware Requirements
-The artifact does not require special hardware (can be executed on a laptop).
+The artifact does not require special hardware and can be executed on a standard laptop.
 
 ### Software Requirements
-All packages (cloudflair/circle, gnark) will be setup with `go`.
+Dependencies such as `cloudflair/circle` and `gnark` are installed using `go`.
 
 ### Estimated Time and Storage Consumption
-Operations are mostly CPU bound. Benchmark execution on an Apple M1 (2020) requires about 10 minutes.
-
+Benchmark execution is CPU-bound. On an Apple M1 (2020), it takes approximately 10 minutes.
 
 ## Environment
-Access is given via GitHub and execution can be done either directly or through a container.
 
-### Accessibility (All badges)
-The artifact can be reviewed under: [OPPID-artifacts](https://github.com/jmakr0/OPPID-artifacts)
+The artifact is accessible via GitHub and can be executed either directly or within a container.
 
-### Set up the environment (Only for Functional and Reproduced badges)
-Clone repository and make all executables runnable:
-```bash
+### Accessibility (All Badges)
+Artifact repository: [OPPID-artifacts](https://github.com/jmakr0/OPPID-artifacts)
+
+### Setting up the Environment (Only for Functional and Reproduced Badges)
+To prepare the environment, clone the repository and make the scripts executable:
+
+```shell
 git clone git@github.com:jmakr0/OPPID-artifacts.git
 cd OPPID-artifacts
 chmod +x run_benchmarks.sh
 chmod +x run_benchmarks_docker.sh
 ```
 
-If running benchmarks locally (outside a container), install the required dependencies:
+If running locally (outside a container), install the required dependencies:
 ```shell
 go mod download
 ```
 
-### Testing the Environment (Only for Functional and Reproduced badges)
+### Testing the Environment (Only for Functional and Reproduced Badges)
 
-The artifact can be executed using either of the following methods:
+The benchmarks can be executed using one of the following methods:
 
 #### Direct Execution
 
-To execute the benchmarks directly, run:
+Run the benchmarks directly:
 ```shell
 ./run_benchmarks.sh
 ```
-
-Results will be stored in `./benchmark_results.log` by default. You can also customize the output file name using:
+Results are saved in `./benchmark_results.log` by default. Customize the output file name with:
 ```shell
 ./run_benchmarks.sh benchmark_results_custom.log
 ```
 
 #### Using Docker
 
-To execute all benchmarks within a Docker container, run:
+Run the benchmarks within a Docker container:
 ```shell
 ./run_benchmarks_docker.sh
 ```
-As with direct execution, you can customize the log file name using an additional argument.
 
+Similarly, customize the log file name by passing an additional argument.
 
-## Artifact Evaluation (Only for Functional and Reproduced badges)
+## Artifact Evaluation (Only for Functional and Reproduced Badges)
 
-The benchmarks compare the costs of the cryptographic operations of OPPID against four other Single Sign-On (SSO) protocols, 
-focusing on execution times and resource usage in an isolated environment.
+This artifact evaluates the cryptographic performance of OPPID against four other Single Sign-On (SSO) protocols, focusing on execution times and resource usage in an isolated environment.
 
-The four SSO protocols contrasted against OPPID are:
+Protocols Evaluated:
 - [OIDC (OpenID Connect)](https://openid.net/specs/openid-connect-core-1_0.html#PairwiseAlg)
 - [AIF-ZKP](https://petsymposium.org/popets/2023/popets-2023-0100.php)
 - [Pairwise POIDC](https://dl.acm.org/doi/10.1145/3320269.3384724)
 - [UPPRESSO](https://arxiv.org/pdf/2110.10396)
 
-These protocols satisfy different security and privacy properties, as detailed in Table 1 of the OPPID paper.
+Table 1 in the OPPID paper details the different security and privacy properties of these protocols in our setting.
 
 ### Main Results and Claims
 
-The evaluation claims that:
-- OPPID performs reasonable efficient, given that it satisfies all security/privacy properties
-- Its communication costs (request sizes sent to the IdP) are relatively small 
+The paper claims:
+- OPPID is computationally efficient while meeting all security and privacy properties.
 
-#### Main Result 1: Execution Times
+#### Main Result: Execution Times
 
-The execution times are shown in Table 2 in Section 5 on page 13 and can also be found [here](https://github.com/jmakr0/OPPID/blob/main/benchmark_results_pets25.log). 
-The results are summarizes in the paragraph *Evaluation Results*.
-For OPPID, user operations (Init, Fin) and token verification (Vf)
-each take only about 2ms, proof verification (Res) at the IdP requires only 12ms
-after a 8ms generation time at the RP (Req).
-
-#### Main Result 2: Communication Costs
-
-todo: its more an "observation" than a main result; put it as "sub-case" of the previous
-
-The communications costs are:
-- OPPID: the authentication proof and blinded `rid` value result in 864 bytes
-- PPOIDC: the pre-compiled circuit has 56MB and a 121MB proving key
+Detailed execution times are in Table 2 (Section 5, Page 13) and available [here](https://github.com/jmakr0/OPPID/blob/main/benchmark_results_pets25.log). Key observations include:
+- User operations (Init, Fin) and RP token verification (Vf): ~2ms each
+- Proof verification (Res) at the IdP: 12ms after an 8ms request generation (Req) at the RP
 
 ### Experiments
 
-List each experiment the reviewer has to execute. Describe:
-- How to execute it in detailed steps.
-- What the expected result is.
-- How long it takes and how much space it consumes on disk. (approximately)
-- Which claim and results does it support, and how.
+The benchmark experiments contrast cryptographic operation costs across the five SSO protocols.
 
 #### Experiment 1: Benchmarks
-The benchmarks can be executed as follows:
+
+Execute benchmarks using:
 ```shell
-# Either directly
+# Direct execution
 ./run_benchmarks.sh
 
-# Or using docker
+# Docker execution
 ./run_benchmarks_docker.sh
 ```
-Results will be stored in `./benchmark_results.log` and exhibit a format that includes details about execution 
-time and memory usage for each protocol. An example result entry:
+**Duration**: ~10 minutes
+
+**Results Location**: `./benchmark_results.log`
+
+**Output Format**:
 ```text
 BenchmarkOPPIDInit-8                1096     1097830 ns/op           1.098 ms/op      3521 B/op       72 allocs/op
 - 1096: Number of iterations
@@ -134,35 +123,25 @@ BenchmarkOPPIDInit-8                1096     1097830 ns/op           1.098 ms/op
 - 3521 B/op: Bytes allocated per operation
 - 72 allocs/op: Memory allocations per operation
 ```
-**Relevant Operations:** Init, Request, Response, Finalize, Verify
-**Relevant Metrics:** Execution time in ms
 
-#### Experiment 2: Communication Costs
-The costs for an Element in $(Z_q, G_1, G_2, G_T)$ are 
-([32](https://github.com/cloudflare/circl/blob/91946a37b9b8da646abe6252153d918707cda136/ecc/bls12381/ff/scalar.go#L10), [48](https://github.com/cloudflare/circl/blob/91946a37b9b8da646abe6252153d918707cda136/ecc/bls12381/g1.go#L18), [92](https://github.com/cloudflare/circl/blob/91946a37b9b8da646abe6252153d918707cda136/ecc/bls12381/g2.go#L16), [576](https://github.com/cloudflare/circl/blob/91946a37b9b8da646abe6252153d918707cda136/ecc/bls12381/gt.go#L6),)
-byes.
+**Relevant Operations**: Init, Request, Response, Finalize, Verify
 
-- OPPID: The proof struct can be seen [here](), encompassing $(3Z_q + 3G_1 + 1G_T)$ plus the blinded `rid` value with $1G_1$, resulting in $ 3*32+4*48+576=864 $ bytes.
+**Metrics**: Execution time (ms)
 
-To obtain detailed information about the compiled (R1CS) circuit, which is required for PPOIDC, execute the following script:
-```shell
-go test -v -run ^TestCircuitMetadata$ ./pkg/other/nizk/hash
-```
-This script outputs key metrics for your reference, including:
-- Number of constraints: The total constraints in the circuit
-- Key generation time: The time required for key generation (measured in seconds)
-- Size of the circuit (in MB)
-- Size of the proving key (in MB)
-- Size of the verification key (in MB)
+**Expected Outcome**:
+- *OIDC*: Res, Vf ≤ 2ms
+- *AIF-ZKP*: Init, Fin ≤ 2ms; Vf ≤ 2ms; Req ≤ 7ms; Res ≤ 12ms
+- *PPOIDC*: Init ≤ 4500ms; Vf ≤ 2ms; Res ≤ 6ms
+- *UPPRESSO*: Init, Vf, Req ≤ 2ms; Res ≤ 2ms
+- *OPPID*: Init, Fin ≤ 2ms; Vf ≤ 2ms; Req ≤ 8ms; Res ≤ 15ms
 
-## Limitations (Only for Functional and Reproduced badges)
-All claims should be reproducible.
+## Limitations (Only for Functional and Reproduced Badges)
 
-## Notes on Reusability (Only for Functional and Reproduced badges)
+All claims are expected to be reproducible under the described setup.
 
-todo
+## Notes on Reusability (Only for Functional and Reproduced Badges)
 
-First, this section might not apply to your artifacts.
-Use it to share information on how your artifact can be used beyond your research paper, e.g., as a general framework.
-The overall goal of artifact evaluation is not only to reproduce and verify your research but also to help other researchers to re-use and improve on your artifacts.
-Please describe how your artifacts can be adapted to other settings, e.g., more input dimensions, other datasets, and other behavior, through replacing individual modules and functionality or running more iterations of a specific part.
+Beyond reproducing benchmark results, the artifact allows researchers to reuse and extend the implemented building blocks. 
+For example:
+- Privacy-preserving RP authentication
+- Implementing PS signatures, Pedersen commitments, and non-interactive zero-knowledge proofs in new SSO approaches
