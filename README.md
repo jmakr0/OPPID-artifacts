@@ -70,7 +70,7 @@ Results will be stored in `./benchmark_results.log` by default. You can also cus
 
 To execute all benchmarks within a Docker container, run:
 ```shell
-./run_benchmarks_container.sh
+./run_benchmarks_docker.sh
 ```
 
 As with direct execution, you can customize the log file name using an additional argument.
