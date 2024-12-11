@@ -1,7 +1,9 @@
 # Artifact Appendix
 
-**Paper Title**: **OPPID: Single Sign-On with Oblivious Pairwise Pseudonyms**  
+**Paper Title**: **OPPID: Single Sign-On with Oblivious Pairwise Pseudonyms**
+
 **Artifacts HotCRP ID**: 12
+
 **Requested Badge**: **Reproduced**
 
 ## Description
@@ -109,7 +111,9 @@ Execute benchmarks using:
 ./run_benchmarks_docker.sh
 ```
 **Duration**: ~10 minutes
+
 **Results Location**: `./benchmark_results.log`
+
 **Output Format**:
 ``
 ```text
@@ -122,7 +126,9 @@ BenchmarkOPPIDInit-8                1096     1097830 ns/op           1.098 ms/op
 ```
 
 **Relevant Operations**: Init, Request, Response, Finalize, Verify
+
 **Metrics**: Execution time (ms)
+
 **Expected Outcome**:
 - *OIDC*: Res, Vf ≤ 2ms
 - *AIF-ZKP*: Init, Fin ≤ 2ms; Vf ≤ 2ms; Req ≤ 7ms; Res ≤ 12ms
