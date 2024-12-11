@@ -59,7 +59,7 @@ Run the benchmarks directly:
 ```shell
 ./run_benchmarks.sh
 ```
-Results are saved in `./benchmark_results.log by default. Customize the output file name with:
+Results are saved in `./benchmark_results.log` by default. Customize the output file name with:
 ```shell
 ./run_benchmarks.sh benchmark_results_custom.log
 ```
