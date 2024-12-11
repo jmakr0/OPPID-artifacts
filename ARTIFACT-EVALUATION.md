@@ -115,7 +115,6 @@ Execute benchmarks using:
 **Results Location**: `./benchmark_results.log`
 
 **Output Format**:
-``
 ```text
 BenchmarkOPPIDInit-8                1096     1097830 ns/op           1.098 ms/op      3521 B/op       72 allocs/op
 - 1096: Number of iterations
