@@ -1,19 +1,13 @@
 package oppid
 
 import (
-<<<<<<< HEAD
-	PC "OPPID/pkg/oppid/commit/pc"
-	PS "OPPID/pkg/oppid/sign/ps"
-	"OPPID/pkg/oppid/utils"
-	NIZK "OPPID/pkg/other/nizk/comsig"
-=======
-	PC "OPPID/pkg/commit/pc"
-	NIZK "OPPID/pkg/nizk/comsig"
-	PS "OPPID/pkg/sign/ps"
-	"OPPID/pkg/utils"
->>>>>>> main
-	GG "github.com/cloudflare/circl/ecc/bls12381"
+	PC "OPPID-artifacts/pkg/oppid/commit/pc"
+	NIZK "OPPID-artifacts/pkg/oppid/nizk/comsig"
+	PS "OPPID-artifacts/pkg/oppid/sign/ps"
+	"OPPID-artifacts/pkg/oppid/utils"
 	"testing"
+
+	GG "github.com/cloudflare/circl/ecc/bls12381"
 )
 
 func setupAndKeyGen(t *testing.T) (*PublicParams, *PrivateKey, *PublicKey) {

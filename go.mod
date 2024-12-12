@@ -1,4 +1,4 @@
-module OPPID
+module OPPID-artifacts
 
 go 1.23
 

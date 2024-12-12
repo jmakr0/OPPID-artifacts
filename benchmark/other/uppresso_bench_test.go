@@ -1,11 +1,12 @@
 package other
 
 import (
-	"OPPID/pkg/oppid/utils"
-	UPPRESSO "OPPID/protocol/other/uppresso"
-	GG "github.com/cloudflare/circl/ecc/bls12381"
+	"OPPID-artifacts/pkg/oppid/utils"
+	UPPRESSO "OPPID-artifacts/protocol/other/uppresso"
 	"testing"
 	"time"
+
+	GG "github.com/cloudflare/circl/ecc/bls12381"
 )
 
 func setupUPPRESSOBenchmark() (*UPPRESSO.PublicParams, *GG.Scalar, []byte, []byte, *UPPRESSO.PrivateKey, *UPPRESSO.PublicKey, UPPRESSO.CertRP) {

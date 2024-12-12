@@ -3,11 +3,12 @@
 package com
 
 import (
-	PC "OPPID/pkg/oppid/commit/pc"
-	"OPPID/pkg/oppid/utils"
+	PC "OPPID-artifacts/pkg/oppid/commit/pc"
+	"OPPID-artifacts/pkg/oppid/utils"
 	"bytes"
-	GG "github.com/cloudflare/circl/ecc/bls12381"
 	"log"
+
+	GG "github.com/cloudflare/circl/ecc/bls12381"
 )
 
 const DST = "OPPID_BLS12384_XMD:SHA-256_NIZK_PC"

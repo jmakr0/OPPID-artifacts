@@ -1,9 +1,10 @@
 package ps
 
 import (
-	"OPPID/pkg/oppid/utils"
-	GG "github.com/cloudflare/circl/ecc/bls12381"
+	"OPPID-artifacts/pkg/oppid/utils"
 	"testing"
+
+	GG "github.com/cloudflare/circl/ecc/bls12381"
 )
 
 func TestNewParams(t *testing.T) {

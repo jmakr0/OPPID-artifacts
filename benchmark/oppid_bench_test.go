@@ -1,7 +1,7 @@
 package benchmark
 
 import (
-	OPPID "OPPID/protocol/oppid"
+	OPPID "OPPID-artifacts/protocol/oppid"
 	"testing"
 	"time"
 )

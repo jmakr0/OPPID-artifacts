@@ -6,11 +6,12 @@
 package sig
 
 import (
-	PS "OPPID/pkg/oppid/sign/ps"
-	"OPPID/pkg/oppid/utils"
+	PS "OPPID-artifacts/pkg/oppid/sign/ps"
+	"OPPID-artifacts/pkg/oppid/utils"
 	"bytes"
-	GG "github.com/cloudflare/circl/ecc/bls12381"
 	"log"
+
+	GG "github.com/cloudflare/circl/ecc/bls12381"
 )
 
 const DSTStr = "OPPID_BLS12384_XMD:SHA-256_NIZK_PS"

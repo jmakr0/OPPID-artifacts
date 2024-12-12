@@ -7,13 +7,14 @@
 package comsig
 
 import (
-	PC "OPPID/pkg/oppid/commit/pc"
-	NIZKPS "OPPID/pkg/oppid/nizk/sig"
-	PS "OPPID/pkg/oppid/sign/ps"
-	"OPPID/pkg/oppid/utils"
+	PC "OPPID-artifacts/pkg/oppid/commit/pc"
+	NIZKPS "OPPID-artifacts/pkg/oppid/nizk/sig"
+	PS "OPPID-artifacts/pkg/oppid/sign/ps"
+	"OPPID-artifacts/pkg/oppid/utils"
 	"bytes"
-	GG "github.com/cloudflare/circl/ecc/bls12381"
 	"log"
+
+	GG "github.com/cloudflare/circl/ecc/bls12381"
 )
 
 const dstStr = "OPPID_BLS12384_XMD:SHA-256_NIZK_PC_PS_"

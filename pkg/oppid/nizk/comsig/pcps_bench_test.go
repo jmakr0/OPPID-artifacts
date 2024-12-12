@@ -1,8 +1,8 @@
 package comsig
 
 import (
-	PC "OPPID/pkg/oppid/commit/pc"
-	PS "OPPID/pkg/oppid/sign/ps"
+	PC "OPPID-artifacts/pkg/oppid/commit/pc"
+	PS "OPPID-artifacts/pkg/oppid/sign/ps"
 	"testing"
 	"time"
 )

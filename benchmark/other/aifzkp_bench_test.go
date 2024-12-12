@@ -1,7 +1,7 @@
 package other
 
 import (
-	"OPPID/protocol/other/aifzkp"
+	"OPPID-artifacts/protocol/other/aifzkp"
 	"testing"
 	"time"
 )

@@ -1,7 +1,7 @@
 package other
 
 import (
-	PPOIDC "OPPID/protocol/other/ppoidc"
+	PPOIDC "OPPID-artifacts/protocol/other/ppoidc"
 	"crypto/rand"
 	"testing"
 	"time"

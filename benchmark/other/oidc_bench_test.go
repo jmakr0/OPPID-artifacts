@@ -1,7 +1,7 @@
 package other
 
 import (
-	OIDC "OPPID/protocol/other/oidc"
+	OIDC "OPPID-artifacts/protocol/other/oidc"
 	"testing"
 	"time"
 )

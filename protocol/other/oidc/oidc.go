@@ -7,7 +7,7 @@
 package oidc
 
 import (
-	RSA "OPPID/pkg/oppid/sign/rsa256"
+	RSA "OPPID-artifacts/pkg/oppid/sign/rsa256"
 	"bytes"
 	"crypto/rand"
 	"crypto/sha256"

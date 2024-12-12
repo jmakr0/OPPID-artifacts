@@ -1,6 +1,6 @@
-# OPPID: Single Sign-On with Oblivious Pairwise Pseudonyms
+# OPPID: Single Sign-On with Oblivious Pairwise Pseudonyms – Artifacts Repository
 
-This repository contains a prototypical implementation of the OPPID protocol, as described in the paper published at [PETS'25](https://petsymposium.org/2025/paperlist.php).
+This repository contains a prototype implementation of the OPPID protocol, as described in the paper published at [PETS'25](https://petsymposium.org/2025/paperlist.php).
 It also includes the evaluation benchmarks of Section 5 in the paper. Overall, these benchmarks compare the costs of the 
 cryptographic operations of OPPID against four other Single Sign-On (SSO) protocols, focusing on execution times and 
 resource usage in an isolated environment.
@@ -16,10 +16,13 @@ These protocols satisfy different security and privacy properties, as detailed i
 The cryptographic building blocks for these protocols were implemented using [cloudflare/circl](https://github.com/cloudflare/circl).
 Additionally, Pairwise POIDC's pre-image proof of a standard hash function is realized through a zk-SNARK using [gnark](https://github.com/Consensys/gnark).
 
+**Note**: the purpose of this repository is to support the evaluation of OPPID as presented in the paper. There is no plan to maintain this Go module.
+A standalone implementation of the OPPID protocol will be provided as a separated repository.
+
 ### Repository Structure
 
 ```text
-OPPID/
+OPPID-artifacts/
 ├── benchmark/                 # Benchmarks for OPPID and the four other SSO protocols
 ├── pkg/                       # Go packages implementing cryptographic building blocks
 ├── protocol/                  # Protocol definitions and implementations
@@ -90,21 +93,22 @@ BenchmarkOPPIDInit-8                1096     1097830 ns/op           1.098 ms/op
 
 ### Evaluation Results
 
-The benchmarks for the PETS'25 submission were conducted on an Apple M1 CPU (8-core, 2020, 3.2 GHz).
+The benchmarks for the PETS'25 paper were conducted on an Apple M1 CPU (8-core, 2020, 3.2 GHz).
 You can find the results in [benchmark_results_pets25.log](benchmark_results_pets25.log).
 
 ## Additional Tests & Benchmarks
 
 All packages include test cases and benchmarks that can be executed directly.
 
-To benchmark all packages:
-```shell
-go test -bench=. -timeout=120m -benchmem ./pkg/...
-```
-
 To execute all package tests:
 ```shell
-go test ./pkg/...
+go test -timeout=60m ./pkg/...
+```
+Note that this might take a while (~15-20min) because of the large proof generation required by the `ppoidc` protocol.
+
+To benchmark (but not the tests) all packages:
+```shell
+go test -run=none -bench=. -timeout=120m -benchmem ./pkg/...
 ```
 
 ### Circuit Details
