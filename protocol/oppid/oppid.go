@@ -3,24 +3,16 @@
 package oppid
 
 import (
-<<<<<<< HEAD
 	PC "OPPID/pkg/oppid/commit/pc"
 	NIZK "OPPID/pkg/oppid/nizk/comsig"
 	FK "OPPID/pkg/oppid/prf/fk"
 	PS "OPPID/pkg/oppid/sign/ps"
 	RSA "OPPID/pkg/oppid/sign/rsa256"
 	"OPPID/pkg/oppid/utils"
-=======
-	PC "OPPID/pkg/commit/pc"
-	NIZK "OPPID/pkg/nizk/comsig"
-	FK "OPPID/pkg/prf/fk"
-	PS "OPPID/pkg/sign/ps"
-	RSA "OPPID/pkg/sign/rsa256"
-	"OPPID/pkg/utils"
->>>>>>> main
 	"bytes"
 	"errors"
 	"fmt"
+
 	GG "github.com/cloudflare/circl/ecc/bls12381"
 )
 
