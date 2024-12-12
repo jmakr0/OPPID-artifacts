@@ -6,8 +6,8 @@
 package ppoidc
 
 import (
-	RSA "OPPID/pkg/oppid/sign/rsa256"
-	hash2 "OPPID/pkg/other/nizk/hash"
+	RSA "OPPID-artifacts/pkg/oppid/sign/rsa256"
+	hash2 "OPPID-artifacts/pkg/other/nizk/hash"
 	"bytes"
 	"crypto/rand"
 	"crypto/sha256"

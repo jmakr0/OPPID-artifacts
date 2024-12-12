@@ -1,7 +1,8 @@
 package dl
 
 import (
-	"OPPID/pkg/oppid/utils"
+	"OPPID-artifacts/pkg/oppid/utils"
+
 	GG "github.com/cloudflare/circl/ecc/bls12381"
 )
 

@@ -1,7 +1,7 @@
 package sig
 
 import (
-	PS "OPPID/pkg/oppid/sign/ps"
+	PS "OPPID-artifacts/pkg/oppid/sign/ps"
 	"testing"
 )
 

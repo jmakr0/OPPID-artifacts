@@ -1,9 +1,10 @@
 package fk
 
 import (
-	DLPRF "OPPID/pkg/oppid/prf/dl"
-	HMACPRF "OPPID/pkg/oppid/prf/hmac256"
-	"OPPID/pkg/oppid/utils"
+	DLPRF "OPPID-artifacts/pkg/oppid/prf/dl"
+	HMACPRF "OPPID-artifacts/pkg/oppid/prf/hmac256"
+	"OPPID-artifacts/pkg/oppid/utils"
+
 	GG "github.com/cloudflare/circl/ecc/bls12381"
 )
 

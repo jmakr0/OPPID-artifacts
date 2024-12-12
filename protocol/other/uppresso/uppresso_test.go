@@ -1,7 +1,7 @@
 package uppresso
 
 import (
-	"OPPID/pkg/oppid/utils"
+	"OPPID-artifacts/pkg/oppid/utils"
 	"testing"
 )
 

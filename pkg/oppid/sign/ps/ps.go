@@ -6,9 +6,10 @@
 package ps
 
 import (
-	"OPPID/pkg/oppid/utils"
-	GG "github.com/cloudflare/circl/ecc/bls12381"
+	"OPPID-artifacts/pkg/oppid/utils"
 	"log"
+
+	GG "github.com/cloudflare/circl/ecc/bls12381"
 )
 
 const dstStr = "OPPID_BLS12384_XMD:SHA-256_PS_"

@@ -7,10 +7,11 @@
 package uppresso
 
 import (
-	RSA "OPPID/pkg/oppid/sign/rsa256"
-	"OPPID/pkg/oppid/utils"
+	RSA "OPPID-artifacts/pkg/oppid/sign/rsa256"
+	"OPPID-artifacts/pkg/oppid/utils"
 	"bytes"
 	"errors"
+
 	GG "github.com/cloudflare/circl/ecc/bls12381"
 )
 

@@ -3,12 +3,12 @@
 package oppid
 
 import (
-	PC "OPPID/pkg/oppid/commit/pc"
-	NIZK "OPPID/pkg/oppid/nizk/comsig"
-	FK "OPPID/pkg/oppid/prf/fk"
-	PS "OPPID/pkg/oppid/sign/ps"
-	RSA "OPPID/pkg/oppid/sign/rsa256"
-	"OPPID/pkg/oppid/utils"
+	PC "OPPID-artifacts/pkg/oppid/commit/pc"
+	NIZK "OPPID-artifacts/pkg/oppid/nizk/comsig"
+	FK "OPPID-artifacts/pkg/oppid/prf/fk"
+	PS "OPPID-artifacts/pkg/oppid/sign/ps"
+	RSA "OPPID-artifacts/pkg/oppid/sign/rsa256"
+	"OPPID-artifacts/pkg/oppid/utils"
 	"bytes"
 	"errors"
 	"fmt"

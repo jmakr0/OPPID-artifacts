@@ -1,7 +1,7 @@
 package com
 
 import (
-	PC "OPPID/pkg/oppid/commit/pc"
+	PC "OPPID-artifacts/pkg/oppid/commit/pc"
 	"testing"
 	"time"
 )
