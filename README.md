@@ -16,8 +16,8 @@ These protocols satisfy different security and privacy properties, as detailed i
 The cryptographic building blocks for these protocols were implemented using [cloudflare/circl](https://github.com/cloudflare/circl).
 Additionally, Pairwise POIDC's pre-image proof of a standard hash function is realized through a zk-SNARK using [gnark](https://github.com/Consensys/gnark).
 
-**Note**: the purpose of this repository is to support the evaluation of OPPID as presented in the paper. There is no plan to maintain this Go module.
-A standalone implementation of the OPPID protocol will be provided as a separated repository.
+**Note**: The purpose of this repository is to support the evaluation of OPPID as presented in the paper. This Go module 
+is not intended to be maintained. A standalone implementation of the OPPID protocol will be provided as a separate repository.
 
 ### Repository Structure
 
@@ -27,13 +27,13 @@ OPPID-artifacts/
 ├── pkg/                       # Go packages implementing cryptographic building blocks
 ├── protocol/                  # Protocol definitions and implementations
 ├── dockerfile                 # Docker configuration for containerized benchmarking
-├── run_benchmark.sh           # Execute benchmarks directly (requires dependency setup)
-├── run_benchmark_docker.sh    # Execute benchmarks within a docker container
+├── run_benchmarks.sh           # Execute benchmarks directly (requires dependency setup)
+├── run_benchmarks_docker.sh    # Execute benchmarks within a docker container
 ```
 
 ## Setup
 
-Before running the benchmarks, ensure that the environment is correctly set up.
+Before running the benchmarks, ensure that the environment is properly set up.
 
 #### Prerequisites
 - **Go programming language**: Version 1.23 or later.
